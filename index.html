@@ -222,21 +222,7 @@
                 </button>
               </div>
 
-              <!-- Pengaturan Harga Per Personil -->
-              <div class="bg-rancage-creamDark/80 rounded-xl p-3.5 mb-4 border border-rancage-gold/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <span class="text-xs font-semibold text-rancage-purple block">Tarif Standar per Personil:</span>
-                  <span class="text-[11px] text-gray-500">Range resmi: Rp 350.000 – Rp 500.000 / personil</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <select id="dangdut-rate-selector" onchange="updateDangdutRate(this.value)" class="text-xs sm:text-sm font-bold text-rancage-purple bg-white border border-rancage-gold rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-rancage-purple">
-                    <option value="350000">Rp 350.000 / org</option>
-                    <option value="400000" selected>Rp 400.000 / org (Standar)</option>
-                    <option value="450000">Rp 450.000 / org</option>
-                    <option value="500000">Rp 500.000 / org</option>
-                  </select>
-                </div>
-              </div>
+
 
               <!-- Daftar Personil dalam Paket (Bisa tambah/kurang) -->
               <div id="dangdut-personil-list" class="space-y-2.5">
@@ -947,24 +933,39 @@
       updateCalculator();
     }
 
+    function rancageDangdutUnitPrice(pkgId, role) {
+      const pack=DATA_DANGDUT_PERSONIL_PACKAGES&&DATA_DANGDUT_PERSONIL_PACKAGES[pkgId];
+      if(!pack||!Array.isArray(pack.rows))return null;
+      const target=String(role||'').toLowerCase();
+      let row=pack.rows.find(r=>/penyanyi/i.test(target)&&/penyanyi/i.test(String(r.jenis||'')));
+      if(!row)row=pack.rows.find(r=>{
+        const name=String(r.jenis||'').toLowerCase().replace(/\\s+\\d+$/,'').trim();
+        const wanted=target.replace(/\\s+\\d+$/,'').trim();
+        return name===wanted||name.includes(wanted)||wanted.includes(name);
+      });
+      return row?Math.max(0,Number(row.harga)||0):null;
+    }
+
     function renderDangdutRoster() {
       const listEl = document.getElementById('dangdut-personil-list');
-      listEl.innerHTML = state.dangdut.roster.map((role, idx) => `
+      listEl.innerHTML = state.dangdut.roster.map((role, idx) => {
+        const unitPrice=rancageDangdutUnitPrice(state.dangdut.packageId,role);
+        return `
         <div class="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 text-xs">
           <div class="flex items-center gap-2">
             <span class="w-5 h-5 rounded-full bg-rancage-purple/10 text-rancage-purple font-bold flex items-center justify-center text-[10px]">${idx + 1}</span>
             <span class="font-medium text-gray-800">${role}</span>
           </div>
           <div class="flex items-center gap-3">
-            <span class="text-gray-500 font-medium">${idx >= (DATA_DANGDUT_PACKAGES.find(p => p.id === state.dangdut.packageId)?.personilCount || 0) ? formatRupiah(state.dangdut.ratePerPerson) : 'Termasuk paket'}</span>
+            <span class="text-gray-500 font-medium">${unitPrice===null?'Harga belum diatur':formatRupiah(unitPrice)}</span>
             ${/penyanyi/i.test(String(role)) && state.dangdut.roster.filter(x=>/penyanyi/i.test(String(x))).length > 1 ? `
-              <button onclick="removeDangdutPersonil(${idx})" class="text-red-500 hover:text-red-700" title="Hapus personil ini">
+              <button onclick="removeDangdutPersonil(${idx})" class="text-red-500 hover:text-red-700" title="Hapus penyanyi ini">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             ` : ''}
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     function addDangdutPersonil(roleName) {
@@ -1696,8 +1697,7 @@ function rancageRenderPrices(){
    rows.push(row([idx+1+'.'+(j+1),'<input type="text" data-price-path="'+base+'.jenis" value="'+rancageEscapeHtml(item.jenis||'')+'" aria-label="Jenis personil" class="w-52 rounded-lg border border-purple-200 p-2 font-semibold">','<input type="number" min="1" max="100" data-dangdut-qty data-price-path="'+base+'.qty" value="'+(Number(item.qty)||1)+'" oninput="rancageUpdateDangdutTotals(\''+pkg.id+'\')" class="w-20 rounded-lg border border-purple-200 p-2 text-center font-bold">','<input type="number" min="0" step="1000" data-dangdut-price data-price-path="'+base+'.harga" value="'+(Number(item.harga)||0)+'" oninput="rancageUpdateDangdutTotals(\''+pkg.id+'\')" class="w-32 rounded-lg border border-purple-200 p-2 text-right font-bold text-[#4A154B]">','<b data-dangdut-row-total="'+pkg.id+'-'+j+'">'+money((Number(item.qty)||0)*(Number(item.harga)||0))+'</b>']));
   });
  });
- rows.push(row(['+','<b>Personil tambahan</b>','Sesuai kebutuhan','Tarif per orang',priceInput('Tarif personil tambahan Dangdut','dangdut.ratePerPerson',c.dangdut.ratePerPerson)]));
- p.push(table('1. HIBURAN DANGDUT','Rincian formasi personil setiap paket. Harga paket adalah harga dasar formasi; personil di luar formasi dikenakan tarif tambahan per orang.',['No.','Paket / rincian personil','Jumlah','Jenis harga','Harga (Rp)'],rows));
+ p.push(table('1. HIBURAN DANGDUT','Rincian formasi personil setiap paket. Setiap jenis pemain memiliki harga satuan masing-masing.',['No.','Paket / rincian personil','Jumlah','Jenis harga','Harga (Rp)'],rows));
  rows=[];
  const adatRows=Array.isArray(c.adat.rows)?c.adat.rows.slice():DATA_ADAT_PERSONIL.map(i=>({id:i.id,name:i.name,desc:i.desc||'',qty:i.max,price:i.price||0,hasTier:!!i.hasTier,tiers:i.tiers||null}));
  adatRows.sort((a,b)=>rancageAdatRoleRank(a)-rancageAdatRoleRank(b));
