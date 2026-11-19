@@ -1593,7 +1593,7 @@ function rancageRenderPrices(){
  p.push('</tbody></table></div></section>');
  rows=[];
  const kostumRows=Array.isArray(c.kostum.rows)?c.kostum.rows:[];
- p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-2"><div class="flex items-center justify-between gap-2 py-1"><div><h3 class="font-extrabold text-[#4A154B]">5. SEWA KOSTUM</h3><p class="text-[11px] text-gray-500">Atur nama, keterangan, jumlah, harga, dan koleksi foto setiap kostum.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+kostumRows.length+'" onchange="rancageResizeCatalogRows(\\'kostum\\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-hidden rounded-xl border"><table class="w-full table-fixed text-[10px]"><colgroup><col style="width:6%"><col style="width:34%"><col style="width:30%"><col style="width:10%"><col style="width:20%"></colgroup><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Jenis kostum</th><th>Keterangan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-2"><div class="flex items-center justify-between gap-2 py-1"><div><h3 class="font-extrabold text-[#4A154B]">5. SEWA KOSTUM</h3><p class="text-[11px] text-gray-500">Atur nama, keterangan, jumlah, harga, dan koleksi foto setiap kostum.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+kostumRows.length+'" onchange="rancageResizeCatalogRows(\'kostum\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-hidden rounded-xl border"><table class="w-full table-fixed text-[10px]"><colgroup><col style="width:6%"><col style="width:34%"><col style="width:30%"><col style="width:10%"><col style="width:20%"></colgroup><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Jenis kostum</th><th>Keterangan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
  kostumRows.forEach((x,i)=>{
   p.push('<tr class="border-t"><td class="px-1 py-1">'+(i+1)+'</td><td class="px-1 py-1"><input data-price-path="kostum.rows.'+i+'.name" value="'+rancageEscapeHtml(x.name)+'" class="w-full min-w-0 box-border rounded border p-1"></td><td class="px-1 py-1"><input data-price-path="kostum.rows.'+i+'.include" value="'+rancageEscapeHtml(x.include||'')+'" class="w-full min-w-0 box-border rounded border p-1"></td><td class="px-1 py-1"><input type="number" min="1" data-price-path="kostum.rows.'+i+'.qty" value="'+(Number(x.qty)||1)+'" class="w-full min-w-0 box-border rounded border p-1 text-center"></td><td class="px-1 py-1">'+priceInput(x.name,'kostum.rows.'+i+'.price',x.price)+'</td></tr>');
   const photos=Array.isArray(x.photos)?x.photos:[];
@@ -1648,7 +1648,7 @@ function rancageTogglePriceSection(index){
   target.scrollIntoView({behavior:"smooth",block:"start"});
  }
 }
-async async function rancageSaveKostumPhotoConfig(next){
+async function rancageSaveKostumPhotoConfig(next){
  const current=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").single();if(current.error)throw current.error;
  const conf=Object.assign({},current.data.config||{});conf.customer_price_config=next;
  const saved=await rancageSupabase.from("rancage_app_config").update({config:conf,updated_by:rancageCurrentUser.id}).eq("id","main");if(saved.error)throw saved.error;
