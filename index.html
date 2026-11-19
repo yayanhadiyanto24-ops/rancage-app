@@ -745,6 +745,22 @@
         max: 2
       },
       {
+        id: 'pemain_keyboard_adat',
+        name: 'Pemain Keyboard (Upacara Adat)',
+        desc: 'Pengiring musik keyboard khusus untuk rangkaian prosesi Upacara Adat Sunda.',
+        hasTier: false,
+        price: 700000,
+        max: 1
+      },
+      {
+        id: 'pemain_kendang_adat',
+        name: 'Pemain Kendang (Upacara Adat)',
+        desc: 'Pengiring tabuhan kendang khusus untuk rangkaian prosesi Upacara Adat Sunda.',
+        hasTier: false,
+        price: 600000,
+        max: 1
+      },
+      {
         id: 'rama_shinta',
         name: 'Rama & Shinta (Sepasang)',
         desc: 'Tarian simbolis kasih sayang abadi pengantin Sunda.',
@@ -1563,6 +1579,16 @@ Object.keys(personilPackages).forEach(id=>{const saved=remote&&remote.customer_p
   kostum:remote&&remote.kostum&&remote.kostum.serviceFee?rancageClone(remote.kostum.serviceFee):{type:"nominal",value:0}
  }};
 }
+function rancageEnsureAdatMusicians(cfg){
+ if(!cfg||!cfg.adat)return cfg;
+ const rows=Array.isArray(cfg.adat.rows)?cfg.adat.rows:(cfg.adat.rows=[]);
+ const required=[
+  {id:"pemain_keyboard_adat",name:"Pemain Keyboard (Upacara Adat)",desc:"Pengiring musik keyboard khusus untuk rangkaian prosesi Upacara Adat Sunda.",qty:1,price:700000,hasTier:false,tiers:null},
+  {id:"pemain_kendang_adat",name:"Pemain Kendang (Upacara Adat)",desc:"Pengiring tabuhan kendang khusus untuk rangkaian prosesi Upacara Adat Sunda.",qty:1,price:600000,hasTier:false,tiers:null}
+ ];
+ required.forEach(item=>{if(!rows.some(row=>row&&row.id===item.id))rows.push(rancageClone(item));});
+ return cfg;
+}
 function rancageApply(cfg){
  if(cfg.adat&&Array.isArray(cfg.adat.rows)){DATA_ADAT_PERSONIL.splice(0,DATA_ADAT_PERSONIL.length,...cfg.adat.rows.map((r,i)=>({id:r.id||('personil_'+i),name:r.name||('Personil '+(i+1)),desc:r.desc||'',max:Math.max(1,Number(r.qty)||1),hasTier:!!r.hasTier,price:Math.max(0,Number(r.price)||0),tiers:r.hasTier&&r.tiers?rancageClone(r.tiers):undefined})));}
  state.dangdut.ratePerPerson=Math.max(0,Number(cfg.dangdut.ratePerPerson)||0);
@@ -1582,6 +1608,8 @@ async function rancageLoadPriceContext(){
   const r=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").maybeSingle();if(r.error)throw r.error;
   const remote=r.data&&r.data.config?r.data.config:{},defaults=rancageBuildDefault(remote);
   rancageBasePriceConfig=remote.customer_price_config?rancageMerge(defaults,remote.customer_price_config):defaults;
+  // Migrasi ringan: personil musik Upacara Adat tetap ditambahkan pada konfigurasi lama.
+  rancageEnsureAdatMusicians(rancageBasePriceConfig);
   if(!remote.customer_price_config||!remote.customer_price_config.adat||!Array.isArray(remote.customer_price_config.adat.rows)){
    rancageBasePriceConfig.adat.rows=DATA_ADAT_PERSONIL.map(i=>{const x=rancageBasePriceConfig.adat.personil[i.id]||{};const tiers=i.hasTier?rancageClone(x.tiers||i.tiers):null;return {id:i.id,name:i.name,desc:i.desc||'',qty:Number(i.max)||1,price:i.hasTier?Number(tiers&&tiers.mahir&&tiers.mahir.price)||0:Number(x.price!=null?x.price:i.price)||0,hasTier:!!i.hasTier,tiers:tiers};});
   }
@@ -1592,7 +1620,8 @@ async function rancageLoadPriceContext(){
   if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved){
    const own=await rancageSupabase.from("rancage_personil_prices").upsert({user_id:rancageCurrentUser.id,overrides:rancagePriceOverrides||{}},{onConflict:"user_id",ignoreDuplicates:true});if(own.error)throw own.error;
   }
-  rancageApply(rancageMerge(rancageBasePriceConfig,rancagePriceOverrides));
+  const effectiveConfig=rancageEnsureAdatMusicians(rancageMerge(rancageBasePriceConfig,rancagePriceOverrides));
+  rancageApply(effectiveConfig);
  }catch(e){console.error("Muat harga RANCAGÉ:",e);if(!rancageBasePriceConfig)rancageBasePriceConfig=rancageBuildDefault({});rancageApply(rancageBasePriceConfig);showToast("Harga online belum termuat; harga dasar sementara ditampilkan.");}
 }
 function rancageFee(base,fee){if(!fee)return 0;const v=Math.max(0,Number(fee.value)||0);return fee.type==="percent"?Math.round(base*v/100):v;}
