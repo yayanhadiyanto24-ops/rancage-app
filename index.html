@@ -1641,11 +1641,15 @@ async function rancageLoadPriceContext(){
  try{
   const r=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").maybeSingle();if(r.error)throw r.error;
   const remote=r.data&&r.data.config?r.data.config:{};
-  if(!remote.customer_price_config){
+  const savedPrices=remote.customer_price_config;
+  if(!savedPrices){
    if(!rancageCurrentProfile||rancageCurrentProfile.role!=="admin")throw new Error("Konfigurasi harga Admin belum tersedia.");
    rancageBasePriceConfig=rancageBuildDefault(remote);
   }else{
-   rancageBasePriceConfig=rancageMerge(rancageBuildDefault(remote),remote.customer_price_config);
+   const requiredPackages=["orgen","semi","full","akustik"];
+   const complete=!!(savedPrices.dangdut&&savedPrices.dangdut.personilPackages&&requiredPackages.every(id=>savedPrices.dangdut.personilPackages[id]&&Array.isArray(savedPrices.dangdut.personilPackages[id].rows))&&savedPrices.adat&&Array.isArray(savedPrices.adat.rows)&&savedPrices.adat.ambu&&Array.isArray(savedPrices.adat.ambu.rows)&&savedPrices.kursus&&Array.isArray(savedPrices.kursus.rows)&&savedPrices.kostum&&Array.isArray(savedPrices.kostum.rows)&&savedPrices.fees&&savedPrices.fees.dangdut&&savedPrices.fees.adat&&savedPrices.fees.gabungan&&savedPrices.fees.kursus&&savedPrices.fees.kostum);
+   if((!complete)&&(!rancageCurrentProfile||rancageCurrentProfile.role!=="admin"))throw new Error("Konfigurasi harga Admin belum lengkap. Harga katalog tidak ditampilkan agar tidak memakai harga bawaan.");
+   rancageBasePriceConfig=rancageMerge(rancageBuildDefault(remote),savedPrices);
   }
   // Baris baru hanya disiapkan di editor Admin. Pelanggan baru melihatnya setelah disimpan.
   if(rancageCurrentProfile&&rancageCurrentProfile.role==="admin"){
