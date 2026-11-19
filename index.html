@@ -88,6 +88,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-sunda-pattern min-h-screen flex flex-col justify-between">
 
@@ -1351,7 +1352,13 @@
     }
 
     // 5. KIRIM PESANAN KE WHATSAPP
-    function sendToWhatsApp() {
+
+    // Koneksi Supabase RANCAGÉ
+    const RANCAGE_SUPABASE_URL = 'https://ynggwswdwvkgcjlavsnc.supabase.co';
+    const RANCAGE_SUPABASE_KEY = 'sb_publishable_-9Z0Mn53SGo88YOVVADw4w_IuDDkBgN';
+    const rancageSupabase = window.supabase.createClient(RANCAGE_SUPABASE_URL, RANCAGE_SUPABASE_KEY);
+
+    async function sendToWhatsApp() {
       const summary = window._latestOrderSummary;
       if (!summary || summary.items.length === 0) {
         showToast('Silakan pilih minimal 1 layanan terlebih dahulu!');
@@ -1390,9 +1397,55 @@
       message += `• *TOTAL ESTIMASI: ${formatRupiah(summary.grandTotal)}*\n\n`;
       message += `Mohon informasi ketersediaan jadwal untuk tanggal tersebut. Hatur nuhun!`;
 
+      // Simpan pesanan ke database tanpa mewajibkan pelanggan membuat akun.
+      const orderSnapshot = {
+        event_date: date,
+        event_location: location,
+        notes: notes,
+        items: summary.items.map(item => ({
+          category: item.category,
+          name: item.name,
+          detail: item.detail,
+          price: item.price
+        })),
+        subtotal: summary.subtotal,
+        discount: summary.discount,
+        grand_total: summary.grandTotal
+      };
+      const customerPhone = (document.getElementById('cust-phone')?.value || '').trim() || null;
+      const orderPayload = {
+        customer_name: name,
+        customer_phone: customerPhone,
+        category: summary.items.map(item => item.category).join(', '),
+        package_name: summary.items.map(item => item.name).join('; '),
+        amount_snapshot: summary.grandTotal,
+        message_snapshot: message,
+        config_snapshot: orderSnapshot,
+        status: 'baru',
+        created_by: null
+      };
+
+      // Buka tab WhatsApp langsung agar tidak diblokir browser saat menunggu database.
+      const waTab = window.open('about:blank', '_blank');
+      try {
+        const { data: savedOrder, error } = await rancageSupabase
+          .from('rancage_orders')
+          .insert(orderPayload)
+          .select('order_code')
+          .single();
+        if (error) throw error;
+        if (savedOrder?.order_code) {
+          message += `\\n\\n*Kode Pesanan: ${savedOrder.order_code}*`;
+        }
+        showToast('Pesanan berhasil dicatat. WhatsApp akan dibuka.');
+      } catch (error) {
+        console.error('Gagal menyimpan pesanan RANCAGÉ:', error);
+        showToast('Pesanan akan diteruskan melalui WhatsApp, tetapi pencatatan database gagal.');
+      }
       const adminPhone = '6285860755873';
       const waUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
-      window.open(waUrl, '_blank');
+      if (waTab) waTab.location.href = waUrl;
+      else window.location.href = waUrl;
     }
 
     // 6. UTILITAS UI (MODAL, TOAST, COPY, SCROLL)
