@@ -120,6 +120,7 @@
   #rancagePanelContent table.rancage-orders-table th,#rancagePanelContent table.rancage-orders-table td{white-space:nowrap;overflow-wrap:normal}
   #rancagePanelContent table.rancage-orders-table td.rancage-order-package{width:320px;min-width:220px;max-width:360px;white-space:normal;overflow-wrap:anywhere}
   #rancagePanelContent table.rancage-orders-table td.rancage-order-package span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
+  #rancagePanelContent .overflow-x-auto:has(> table.rancage-orders-table){display:block;max-width:100%;overflow-x:auto!important;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1420,7 +1421,9 @@
         showToast('Pesanan berhasil dicatat. WhatsApp akan dibuka.');
       } catch (error) {
         console.error('Gagal menyimpan pesanan RANCAGÉ:', error);
-        showToast('Pesanan akan diteruskan melalui WhatsApp, tetapi pencatatan database gagal.');
+        const detail = error?.message || error?.details || error?.hint || 'Kesalahan tidak diketahui';
+        message += `\n\n*PERINGATAN: Pesanan belum tercatat di sistem.*\nKode kesalahan: ${detail}\nMohon admin mencatat pesanan ini secara manual.`;
+        showToast('GAGAL mencatat pesanan: ' + detail);
       }
       const adminPhone = '6281322578732';
       const waUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
