@@ -1349,6 +1349,23 @@
     const RANCAGE_SUPABASE_KEY = 'sb_publishable_-9Z0Mn53SGo88YOVVADw4w_IuDDkBgN';
     const rancageSupabase = window.supabase.createClient(RANCAGE_SUPABASE_URL, RANCAGE_SUPABASE_KEY);
 
+    async function rancageTrackVisit(){
+      try {
+        const storage = window.localStorage;
+        let visitorKey = storage.getItem("rancage_visitor_key");
+        if (!visitorKey) {
+          visitorKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "rc-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+          storage.setItem("rancage_visitor_key", visitorKey);
+        }
+        const day = new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+        const marker = "rancage_visit_recorded_" + day;
+        if (storage.getItem(marker) === "1") return;
+        const result = await rancageSupabase.from("rancage_visitors").insert({visitor_key:visitorKey});
+        if (!result.error || result.error.code === "23505") storage.setItem(marker, "1");
+      } catch (e) { console.warn("Pencatatan pengunjung belum berhasil:", e); }
+    }
+    rancageTrackVisit();
+
     async function sendToWhatsApp() {
       const summary = window._latestOrderSummary;
       if (!summary || summary.items.length === 0) {
@@ -1796,8 +1813,18 @@ async function rancageConfirmReset(){
   rancagePriceOverrides={};const next=rancageClone(rancageBasePriceConfig);rancageApply(next);renderDangdutPackages();renderDangdutRoster();renderAdatSection();renderKursusSection();renderKostumSection();updateCalculator();rancageRenderPrices();showToast("Harga pribadi kembali ke harga dasar terbaru.");
  }catch(e){showToast("Gagal mengembalikan harga: "+(e.message||"periksa koneksi"));}
 }
-function rancageSetPanelTab(tab){if(tab==="prices")rancageRenderPrices();if(tab==="orders")rancageRenderOrders();if(tab==="cash")rancageRenderCash();if(tab==="approvals")rancageRenderApprovals();if(tab==="link")rancageRenderLink();}
+function rancageSetPanelTab(tab){if(tab==="prices")rancageRenderPrices();if(tab==="orders")rancageRenderOrders();if(tab==="cash")rancageRenderCash();if(tab==="visitors")rancageRenderVisitors();if(tab==="approvals")rancageRenderApprovals();if(tab==="link")rancageRenderLink();}
 function rancageEscapeHtml(v){return String(v==null?"":v).replace(/[&<>"']/g,function(ch){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];});}
+async function rancageRenderVisitors(){
+ const c=document.getElementById("rancagePanelContent");
+ if(!rancageCurrentProfile||rancageCurrentProfile.role!=="admin"){c.innerHTML='<p class="p-3 text-sm text-red-600">Data pengunjung hanya dapat dilihat Admin Utama.</p>';return;}
+ c.innerHTML='<div class="p-4 text-sm text-gray-500">Memuat statistik pengunjung...</div>';
+ const r=await rancageSupabase.rpc("rancage_get_visitor_stats");
+ if(r.error){c.innerHTML='<p class="p-3 text-sm text-red-600">Statistik pengunjung belum dapat dimuat: '+rancageEscapeHtml(r.error.message)+'</p>';return;}
+ const stats=Array.isArray(r.data)?r.data[0]:r.data;
+ const today=Number(stats&&stats.today_visitors)||0,total=Number(stats&&stats.total_visitors)||0;
+ c.innerHTML='<div class="rounded-2xl border border-[#D4AF37]/60 bg-white p-4"><h3 class="font-bold text-sm text-[#4A154B] mb-3">Statistik Pengunjung Aplikasi</h3><div class="grid grid-cols-2 gap-3"><div class="rounded-xl bg-purple-50 p-4"><div class="text-xs text-gray-600">Pengunjung hari ini</div><b class="text-2xl text-[#4A154B]">'+today.toLocaleString("id-ID")+'</b></div><div class="rounded-xl bg-amber-50 p-4"><div class="text-xs text-gray-600">Total pengunjung</div><b class="text-2xl text-[#4A154B]">'+total.toLocaleString("id-ID")+'</b></div></div><p class="text-[10px] text-gray-500 mt-3">Dihitung berdasarkan browser/perangkat unik. Satu browser dihitung sekali per hari; total menghitung browser unik sepanjang waktu. Pengunjung yang berganti perangkat atau menghapus data browser dapat terhitung kembali.</p><button type="button" onclick="rancageRenderVisitors()" class="mt-3 rounded-lg border px-3 py-2 text-xs font-bold text-[#4A154B]">Perbarui statistik</button></div>';
+}
 async function rancageRenderOrders(){
  const c=document.getElementById("rancagePanelContent");c.innerHTML='<div class="p-4 text-sm text-gray-500">Memuat seluruh rincian pesanan...</div>';
  const r=await rancageSupabase.from("rancage_orders").select("id,order_code,customer_name,customer_phone,package_name,amount_snapshot,final_amount,status,created_at").order("created_at",{ascending:false}).limit(300);
@@ -1952,7 +1979,7 @@ async function rancageAcceptSession(user){
  document.getElementById("rancageAuthArea").classList.add("hidden");document.getElementById("rancageWorkspace").classList.remove("hidden");
  document.getElementById("rancagePanelIdentity").textContent="Akun terverifikasi";document.getElementById("rancageWorkspaceName").textContent=r.data.display_name||user.email;
  document.getElementById("rancageRolePill").textContent=r.data.role==="admin"?"ADMIN UTAMA":"PERSONIL";
- document.getElementById("rancageApprovalTab").classList.toggle("hidden",r.data.role!=="admin");document.getElementById("rancageLinkTab").classList.toggle("hidden",r.data.role!=="personil");
+ document.getElementById("rancageApprovalTab").classList.toggle("hidden",r.data.role!=="admin");document.getElementById("rancageLinkTab").classList.toggle("hidden",r.data.role!=="personil");document.getElementById("rancageVisitorTab").classList.toggle("hidden",r.data.role!=="admin");
  rancageSetPanelTab("prices");
 }
 async function rancageOpenPanel(){
@@ -2046,6 +2073,7 @@ async function rancageInitialize(){
     <button type="button" onclick="rancageSetPanelTab('prices')" class="px-3 py-2 rounded-xl text-xs font-bold bg-[#4A154B] text-white">Pengaturan Harga</button>
     <button type="button" onclick="rancageSetPanelTab('orders')" class="px-3 py-2 rounded-xl text-xs font-bold bg-white border text-[#4A154B]">Pesanan</button>
     <button type="button" onclick="rancageSetPanelTab('cash')" class="px-3 py-2 rounded-xl text-xs font-bold bg-white border text-[#4A154B]">Uang Kas 1%</button>
+    <button id="rancageVisitorTab" type="button" onclick="rancageSetPanelTab('visitors')" class="hidden px-3 py-2 rounded-xl text-xs font-bold bg-white border text-[#4A154B]">Pengunjung</button>
     <button id="rancageApprovalTab" type="button" onclick="rancageSetPanelTab('approvals')" class="hidden px-3 py-2 rounded-xl text-xs font-bold bg-white border text-[#4A154B]">Pendaftaran Personil</button>
     <button id="rancageLinkTab" type="button" onclick="rancageSetPanelTab('link')" class="hidden px-3 py-2 rounded-xl text-xs font-bold bg-white border text-[#4A154B]">Link Pelanggan Saya</button>
    </div>
