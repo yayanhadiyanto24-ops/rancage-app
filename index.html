@@ -108,7 +108,7 @@
         <div>
           <div class="flex items-center justify-center sm:justify-start gap-2">
             <h1 class="font-display text-xl sm:text-2xl font-black tracking-wider gold-gradient-text">RANCAGÉ APP</h1>
-            <span class="text-[10px] uppercase tracking-widest bg-rancage-gold/20 text-rancage-goldLight border border-rancage-gold/40 px-2 py-0.5 rounded-full font-semibold">Official</span>
+            <span id="officialUnlock" role="button" tabindex="0" title="Ketuk 5 kali untuk membuka panel pengelola" class="text-[10px] uppercase tracking-widest bg-rancage-gold/20 text-rancage-goldLight border border-rancage-gold/40 px-2 py-0.5 rounded-full font-semibold" style="cursor:pointer">Official</span>
           </div>
           <p class="text-xs sm:text-sm text-rancage-goldLight/90 font-medium tracking-wide">Sanggar Seni Rancagé Al-Batukasuri</p>
         </div>
@@ -832,7 +832,8 @@
     }
 
     // 3. INISIALISASI RENDER UI
-    function initApp() {
+    async function initApp() {
+      await rancageInitialize();
       renderDangdutPackages();
       renderAdatSection();
       renderKursusSection();
@@ -1263,12 +1264,14 @@
         }
       });
 
+      rancageOperationalRows(cartItems, hasDangdut, hasAdat).forEach(function(row){cartItems.push(row);});
+
       // Render Daftar di Kalkulator
       const container = document.getElementById('cart-items-container');
       const summaryBox = document.getElementById('cart-summary-box');
       const badgeCount = document.getElementById('header-badge-count');
 
-      badgeCount.textContent = cartItems.length;
+      badgeCount.textContent = cartItems.filter(function(item){return !item.isOperationalFee;}).length;
 
       if (cartItems.length === 0) {
         container.innerHTML = `
@@ -1422,6 +1425,7 @@
         message_snapshot: message,
         config_snapshot: orderSnapshot,
         status: 'baru',
+        personil_id: rancageCustomerPersonilId,
         created_by: null
       };
 
@@ -1481,9 +1485,234 @@
       }, 3000);
     }
 
+
+// RANCAGÉ: akun personil, harga dasar, harga pribadi, dan pembagian Jatah Pimpro
+let rancageCurrentUser=null, rancageCurrentProfile=null, rancageBasePriceConfig=null;
+let rancageActivePriceConfig=null, rancagePriceOverrides={}, rancageOperationalFees={};
+let rancageCustomerPersonilId=null, rancageOfficialTapCount=0, rancageOfficialTapTimer=null;
+
+function rancageClone(v){return JSON.parse(JSON.stringify(v));}
+function rancageMerge(a,b){
+ if(!b||typeof b!=="object"||Array.isArray(b))return rancageClone(a);
+ const o=rancageClone(a||{});
+ Object.keys(b).forEach(k=>{o[k]=b[k]&&typeof b[k]==="object"&&!Array.isArray(b[k])?rancageMerge(o[k]||{},b[k]):b[k];});
+ return o;
+}
+function rancageSetPath(o,path,v){const p=path.split(".");let t=o;for(let i=0;i<p.length-1;i++){if(!t[p[i]]||typeof t[p[i]]!=="object")t[p[i]]={};t=t[p[i]];}t[p[p.length-1]]=v;}
+function rancageDiff(a,b){
+ const o={};Object.keys(b||{}).forEach(k=>{const x=a?a[k]:undefined,y=b[k];if(y&&typeof y==="object"&&!Array.isArray(y)){const d=rancageDiff(x&&typeof x==="object"?x:{},y);if(Object.keys(d).length)o[k]=d;}else if(JSON.stringify(x)!==JSON.stringify(y))o[k]=y;});return o;
+}
+function rancageRemoteFee(remote,cat,key,fallback){const v=remote&&remote[cat]&&remote[cat][key]&&remote[cat][key].serviceFee;return v?rancageClone(v):rancageClone(fallback);}
+function rancageBuildDefault(remote){
+ const names={orgen:"Orgen Tunggal",semi:"Dangdut Semi",full:"Dangdut Full",akustik:"Paket Lainnya"};
+ const dfees={};Object.keys(names).forEach(k=>dfees[k]=rancageRemoteFee(remote,"dangdut",names[k],{type:"nominal",value:0}));
+ const personil={},ambu={},kursus={},kostum={};
+ DATA_ADAT_PERSONIL.forEach(i=>personil[i.id]=i.hasTier?{tiers:rancageClone(i.tiers)}:{price:Number(i.price)||0});
+ DATA_AMBU_SERVICES.forEach(i=>ambu[i.id]={price:Number(i.price)||0});
+ DATA_KURSUS.forEach(i=>kursus[i.id]={price:Number(i.price)||0});
+ DATA_KOSTUM.forEach(i=>kostum[i.id]={price:Number(i.price)||0});
+ return {dangdut:{ratePerPerson:Number(state.dangdut.ratePerPerson)||400000},adat:{personil:personil,ambu:ambu},kursus:kursus,kostum:kostum,fees:{
+  dangdut:dfees,
+  adat:remote&&remote.adat&&remote.adat.serviceFee?rancageClone(remote.adat.serviceFee):{type:"percent",value:10},
+  gabungan:remote&&remote.gabungan&&remote.gabungan.serviceFee?rancageClone(remote.gabungan.serviceFee):{type:"percent",value:10},
+  kursus:remote&&remote.kursus&&remote.kursus.serviceFee?rancageClone(remote.kursus.serviceFee):{type:"nominal",value:0},
+  kostum:remote&&remote.kostum&&remote.kostum.serviceFee?rancageClone(remote.kostum.serviceFee):{type:"nominal",value:0}
+ }};
+}
+function rancageApply(cfg){
+ state.dangdut.ratePerPerson=Math.max(0,Number(cfg.dangdut.ratePerPerson)||0);
+ DATA_ADAT_PERSONIL.forEach(i=>{const x=cfg.adat.personil[i.id];if(!x)return;if(i.hasTier&&x.tiers)Object.keys(i.tiers).forEach(t=>{if(x.tiers[t])i.tiers[t].price=Math.max(0,Number(x.tiers[t].price)||0);});else if(x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
+ DATA_AMBU_SERVICES.forEach(i=>{const x=cfg.adat.ambu[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
+ DATA_KURSUS.forEach(i=>{const x=cfg.kursus[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
+ DATA_KOSTUM.forEach(i=>{const x=cfg.kostum[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
+ rancageActivePriceConfig=rancageClone(cfg);rancageOperationalFees=rancageClone(cfg.fees||{});
+}
+async function rancageLoadPriceContext(){
+ try{
+  const r=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").maybeSingle();if(r.error)throw r.error;
+  const remote=r.data&&r.data.config?r.data.config:{},defaults=rancageBuildDefault(remote);
+  rancageBasePriceConfig=remote.customer_price_config?rancageMerge(defaults,remote.customer_price_config):defaults;
+  let target=new URLSearchParams(window.location.search).get("personil");
+  if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved&&!target)target=rancageCurrentUser.id;
+  rancageCustomerPersonilId=target||null;rancagePriceOverrides={};
+  if(target){const p=await rancageSupabase.from("rancage_personil_prices").select("overrides").eq("user_id",target).maybeSingle();if(p.error)throw p.error;rancagePriceOverrides=p.data&&p.data.overrides?p.data.overrides:{};}
+  if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved){
+   const own=await rancageSupabase.from("rancage_personil_prices").upsert({user_id:rancageCurrentUser.id,overrides:rancagePriceOverrides||{}},{onConflict:"user_id",ignoreDuplicates:true});if(own.error)throw own.error;
+  }
+  rancageApply(rancageMerge(rancageBasePriceConfig,rancagePriceOverrides));
+ }catch(e){console.error("Muat harga RANCAGÉ:",e);if(!rancageBasePriceConfig)rancageBasePriceConfig=rancageBuildDefault({});rancageApply(rancageBasePriceConfig);showToast("Harga online belum termuat; harga dasar sementara ditampilkan.");}
+}
+function rancageFee(base,fee){if(!fee)return 0;const v=Math.max(0,Number(fee.value)||0);return fee.type==="percent"?Math.round(base*v/100):v;}
+function rancageOperationalRows(items,hasDangdut,hasAdat){
+ const sum=test=>items.reduce((n,i)=>n+(test(i)?Number(i.price)||0:0),0),rows=[],f=rancageOperationalFees||{};
+ const d=sum(i=>i.category==="Hiburan Dangdut"),a=sum(i=>i.category==="Upacara Adat"||i.category==="Prosesi Ambu");
+ const k=sum(i=>i.category==="Kursus Seni"),c=sum(i=>i.category==="Sewa Kostum");
+ const add=(label,amount)=>{if(amount>0)rows.push({category:"Jatah Pimpro",name:"Biaya Layanan dan Operasional (Jatah Pimpro) — "+label,detail:"Biaya layanan dan operasional",price:amount,isOperationalFee:true,onRemove:function(){}});};
+ if(hasDangdut&&hasAdat)add("Paket Gabungan",rancageFee(d+a,f.gabungan));
+ else{if(hasDangdut)add("Dangdut",rancageFee(d,f.dangdut&&f.dangdut[state.dangdut.packageId]));if(hasAdat)add("Upacara Adat",rancageFee(a,f.adat));}
+ if(k>0)add("Kursus Seni",rancageFee(k,f.kursus));if(c>0)add("Sewa Kostum",rancageFee(c,f.kostum));return rows;
+}
+function rancagePriceInput(label,path,value){return '<label class="block space-y-1"><span class="text-xs font-semibold text-gray-700">'+label+'</span><input type="number" min="0" step="1000" data-price-path="'+path+'" value="'+(Number(value)||0)+'" class="w-full rounded-xl border border-purple-200 bg-white p-2.5 text-sm font-bold text-[#4A154B]"></label>';}
+function rancageFeeInput(label,path,fee){const v=fee||{type:"nominal",value:0};return '<div class="rounded-xl border border-[#D4AF37]/50 bg-white p-3 space-y-2"><div class="text-xs font-bold text-[#4A154B]">'+label+'</div><div class="grid grid-cols-2 gap-2"><select data-price-path="'+path+'.type" class="rounded-xl border p-2 text-xs"><option value="nominal" '+(v.type==="nominal"?"selected":"")+'>Nominal (Rp)</option><option value="percent" '+(v.type==="percent"?"selected":"")+'>Persentase (%)</option></select><input type="number" min="0" step="1" data-price-path="'+path+'.value" value="'+(Number(v.value)||0)+'" class="rounded-xl border p-2 text-sm font-bold"></div></div>';}
+function rancageRenderPrices(){
+ const c=rancageActivePriceConfig,admin=rancageCurrentProfile.role==="admin",p=[];
+ p.push('<div class="bg-white rounded-2xl border border-[#D4AF37]/50 p-4 space-y-3"><h3 class="font-extrabold text-[#4A154B]">Harga Layanan</h3><p class="text-xs text-gray-500">'+(admin?"Harga dasar ini menjadi acuan semua personil.":"Perubahan ini hanya berlaku untuk akun Anda dan pelanggan melalui link pribadi Anda.")+'</p>');
+ p.push('<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">'+rancagePriceInput("Tarif per personil Dangdut","dangdut.ratePerPerson",c.dangdut.ratePerPerson)+'</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Upacara Adat — Personil</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
+ DATA_ADAT_PERSONIL.forEach(i=>{const x=c.adat.personil[i.id];if(i.hasTier)Object.keys(i.tiers).forEach(t=>p.push(rancagePriceInput(i.name+" — "+(i.tiers[t].label||t),"adat.personil."+i.id+".tiers."+t+".price",x.tiers[t].price)));else p.push(rancagePriceInput(i.name,"adat.personil."+i.id+".price",x.price));});
+ p.push('</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Layanan Ambu</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
+ DATA_AMBU_SERVICES.forEach(i=>p.push(rancagePriceInput(i.name,"adat.ambu."+i.id+".price",c.adat.ambu[i.id].price)));
+ p.push('</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Kursus Seni</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
+ DATA_KURSUS.forEach(i=>p.push(rancagePriceInput(i.title,"kursus."+i.id+".price",c.kursus[i.id].price)));
+ p.push('</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Sewa Kostum</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
+ DATA_KOSTUM.forEach(i=>p.push(rancagePriceInput(i.name,"kostum."+i.id+".price",c.kostum[i.id].price)));
+ p.push('</div></div><div class="bg-white rounded-2xl border border-[#D4AF37]/50 p-4 space-y-3"><h3 class="font-extrabold text-[#4A154B]">Biaya Layanan dan Operasional (Jatah Pimpro)</h3><p class="text-xs text-gray-500">Satu biaya gabungan; tidak ada harga jasa atau transportasi terpisah.</p>');
+ const names={orgen:"Orgen Tunggal",semi:"Dangdut Semi",full:"Dangdut Full",akustik:"Paket Lainnya / Akustik"};
+ Object.keys(names).forEach(id=>p.push(rancageFeeInput("Dangdut — "+names[id],"fees.dangdut."+id,c.fees.dangdut[id])));
+ p.push(rancageFeeInput("Upacara Adat","fees.adat",c.fees.adat),rancageFeeInput("Paket Gabungan Dangdut + Adat","fees.gabungan",c.fees.gabungan),rancageFeeInput("Kursus Seni","fees.kursus",c.fees.kursus),rancageFeeInput("Sewa Kostum","fees.kostum",c.fees.kostum));
+ p.push('</div><div class="flex flex-wrap gap-2"><button type="button" onclick="rancageSavePrices()" class="flex-1 min-w-[150px] rounded-xl bg-[#4A154B] text-white p-3 text-sm font-extrabold">Simpan Harga</button>');
+ if(!admin)p.push('<button type="button" onclick="rancageAskReset()" class="flex-1 min-w-[150px] rounded-xl border-2 border-[#D4AF37] bg-white text-[#4A154B] p-3 text-sm font-extrabold">↩ Kembali ke Harga Dasar</button>');
+ p.push('</div>');document.getElementById("rancagePanelContent").innerHTML=p.join("");
+}
+function rancageReadPriceForm(){const c=rancageClone(rancageActivePriceConfig);document.querySelectorAll("#rancagePanelContent [data-price-path]").forEach(i=>rancageSetPath(c,i.getAttribute("data-price-path"),i.tagName==="SELECT"?i.value:Math.max(0,Number(i.value)||0)));return c;}
+async function rancageSavePrices(){
+ const next=rancageReadPriceForm();
+ try{
+  if(rancageCurrentProfile.role==="admin"){
+   const current=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").single();if(current.error)throw current.error;
+   const conf=Object.assign({},current.data.config||{});conf.customer_price_config=next;
+   const saved=await rancageSupabase.from("rancage_app_config").update({config:conf,updated_by:rancageCurrentUser.id}).eq("id","main");if(saved.error)throw saved.error;
+   rancageBasePriceConfig=rancageClone(next);rancagePriceOverrides={};
+  }else{
+   const diff=rancageDiff(rancageBasePriceConfig,next);
+   const saved=await rancageSupabase.from("rancage_personil_prices").upsert({user_id:rancageCurrentUser.id,overrides:diff},{onConflict:"user_id"});if(saved.error)throw saved.error;
+   rancagePriceOverrides=diff;
+  }
+  rancageApply(next);renderDangdutPackages();renderDangdutRoster();renderAdatSection();renderKursusSection();renderKostumSection();updateCalculator();rancageRenderPrices();showToast("Harga berhasil disimpan.");
+ }catch(e){console.error(e);showToast("Harga belum tersimpan: "+(e.message||"periksa koneksi"));}
+}
+function rancageAskReset(){const b=document.getElementById("rancageConfirmReset");b.classList.remove("hidden");b.classList.add("flex");}
+function rancageCancelReset(){const b=document.getElementById("rancageConfirmReset");b.classList.add("hidden");b.classList.remove("flex");}
+async function rancageConfirmReset(){
+ rancageCancelReset();try{const r=await rancageSupabase.from("rancage_personil_prices").upsert({user_id:rancageCurrentUser.id,overrides:{}},{onConflict:"user_id"});if(r.error)throw r.error;
+  rancagePriceOverrides={};const next=rancageClone(rancageBasePriceConfig);rancageApply(next);renderDangdutPackages();renderDangdutRoster();renderAdatSection();renderKursusSection();renderKostumSection();updateCalculator();rancageRenderPrices();showToast("Harga pribadi kembali ke harga dasar terbaru.");
+ }catch(e){showToast("Gagal mengembalikan harga: "+(e.message||"periksa koneksi"));}
+}
+function rancageSetPanelTab(tab){if(tab==="prices")rancageRenderPrices();if(tab==="approvals")rancageRenderApprovals();if(tab==="link")rancageRenderLink();}
+function rancageRenderLink(){
+ const u=new URL(window.location.href);u.search="";u.hash="";u.searchParams.set("personil",rancageCurrentUser.id);
+ document.getElementById("rancagePanelContent").innerHTML='<div class="bg-white rounded-2xl border border-[#D4AF37]/50 p-4 space-y-3"><h3 class="font-bold text-[#4A154B]">Link Pelanggan Saya</h3><p class="text-sm text-gray-600">Bagikan link ini kepada pelanggan agar mereka melihat harga pribadi Anda. Pengunjung lain tetap melihat harga dasar atau harga sesuai link personil yang dibuka.</p><input id="rancagePersonalLinkValue" readonly class="w-full rounded-xl border bg-gray-50 p-3 text-xs" value="'+u.toString()+'"><button onclick="navigator.clipboard.writeText(document.getElementById(\'rancagePersonalLinkValue\').value).then(function(){showToast(\'Link pelanggan berhasil disalin.\')})" class="w-full rounded-xl bg-[#4A154B] text-white p-3 text-sm font-bold">Salin Link Pelanggan</button></div>';
+}
+async function rancageRenderApprovals(){
+ const c=document.getElementById("rancagePanelContent");c.innerHTML='<div class="p-4 text-sm text-gray-500">Memuat pendaftaran...</div>';
+ const r=await rancageSupabase.from("rancage_profiles").select("user_id,display_name,is_approved,created_at").eq("role","personil").order("created_at",{ascending:false});
+ if(r.error){c.innerHTML='<p class="text-sm text-red-600">Data personil tidak dapat dimuat.</p>';return;}
+ if(!r.data||!r.data.length){c.innerHTML='<div class="bg-white rounded-2xl p-4 text-sm text-gray-500">Belum ada pendaftaran personil.</div>';return;}
+ c.innerHTML=r.data.map(p=>'<div class="bg-white rounded-2xl border p-3 flex flex-wrap items-center justify-between gap-2"><div><div class="font-bold text-sm text-[#4A154B]">'+(p.display_name||"Personil")+'</div><div class="text-xs '+(p.is_approved?"text-green-700":"text-amber-700")+'">'+(p.is_approved?"Disetujui":"Menunggu persetujuan")+'</div></div><button onclick="rancageSetApproval(\''+p.user_id+'\','+(!p.is_approved)+')" class="text-xs rounded-lg '+(p.is_approved?"border px-3 py-2":"bg-[#4A154B] text-white px-3 py-2 font-bold")+'">'+(p.is_approved?"Nonaktifkan":"Setujui")+'</button></div>').join("");
+}
+async function rancageSetApproval(id,approved){
+ const r=await rancageSupabase.from("rancage_profiles").update({is_approved:approved}).eq("user_id",id).eq("role","personil");if(r.error){showToast("Status personil belum berhasil diubah.");return;}
+ if(approved){const p=await rancageSupabase.from("rancage_personil_prices").upsert({user_id:id,overrides:{}},{onConflict:"user_id"});if(p.error)console.error(p.error);}
+ showToast(approved?"Personil disetujui.":"Akses personil dinonaktifkan.");rancageRenderApprovals();
+}
+function rancageShowLogin(){document.getElementById("rancageLoginBox").classList.remove("hidden");document.getElementById("rancageRegisterBox").classList.add("hidden");}
+function rancageShowRegister(){document.getElementById("rancageLoginBox").classList.add("hidden");document.getElementById("rancageRegisterBox").classList.remove("hidden");}
+function rancageAuthError(msg){const e=document.getElementById("rancageAuthMessage");e.textContent=msg;e.classList.remove("hidden");}
+async function rancageSubmitLogin(e){
+ e.preventDefault();const email=document.getElementById("rancageLoginEmail").value.trim().toLowerCase(),password=document.getElementById("rancageLoginPassword").value;
+ const r=await rancageSupabase.auth.signInWithPassword({email:email,password:password});if(r.error){rancageAuthError("Login gagal. Periksa email dan kata sandi.");return;}await rancageAcceptSession(r.data.user);
+}
+async function rancageSubmitSignup(e){
+ e.preventDefault();const name=document.getElementById("rancageRegisterName").value.trim(),email=document.getElementById("rancageRegisterEmail").value.trim().toLowerCase(),password=document.getElementById("rancageRegisterPassword").value,el=document.getElementById("rancageRegisterMessage");el.classList.add("hidden");
+ const r=await rancageSupabase.auth.signUp({email:email,password:password,options:{data:{full_name:name}}});
+ if(r.error){el.textContent=r.error.message||"Pendaftaran gagal.";el.classList.remove("hidden");return;}
+ el.textContent=r.data.session?"Pendaftaran diterima. Akun menunggu persetujuan Admin Utama.":"Pendaftaran dibuat. Verifikasi email jika diminta, lalu tunggu persetujuan Admin Utama.";el.classList.remove("hidden");if(r.data.session)await rancageSupabase.auth.signOut();
+}
+async function rancageAcceptSession(user){
+ const r=await rancageSupabase.from("rancage_profiles").select("user_id,display_name,role,is_approved").eq("user_id",user.id).maybeSingle();
+ if(r.error||!r.data){await rancageSupabase.auth.signOut();rancageAuthError("Profil akun belum tersedia. Hubungi Admin Utama.");return;}
+ if(r.data.role==="personil"&&!r.data.is_approved){await rancageSupabase.auth.signOut();rancageAuthError("Pendaftaran masih menunggu persetujuan Admin Utama.");return;}
+ if(r.data.role!=="admin"&&r.data.role!=="personil"){await rancageSupabase.auth.signOut();rancageAuthError("Akun tidak memiliki hak akses.");return;}
+ rancageCurrentUser=user;rancageCurrentProfile=r.data;await rancageLoadPriceContext();
+ document.getElementById("rancageAuthArea").classList.add("hidden");document.getElementById("rancageWorkspace").classList.remove("hidden");
+ document.getElementById("rancagePanelIdentity").textContent="Akun terverifikasi";document.getElementById("rancageWorkspaceName").textContent=r.data.display_name||user.email;
+ document.getElementById("rancageRolePill").textContent=r.data.role==="admin"?"ADMIN UTAMA":"PERSONIL";
+ document.getElementById("rancageApprovalTab").classList.toggle("hidden",r.data.role!=="admin");document.getElementById("rancageLinkTab").classList.toggle("hidden",r.data.role!=="personil");
+ rancageSetPanelTab("prices");
+}
+async function rancageOpenPanel(){
+ const p=document.getElementById("rancageAdminPanel");p.classList.remove("hidden");document.getElementById("rancageAuthArea").classList.remove("hidden");document.getElementById("rancageWorkspace").classList.add("hidden");document.getElementById("rancageAuthMessage").classList.add("hidden");
+ const s=await rancageSupabase.auth.getSession();if(s.data&&s.data.session)await rancageAcceptSession(s.data.session.user);
+}
+function rancageClosePanel(){document.getElementById("rancageAdminPanel").classList.add("hidden");}
+async function rancageLogout(){
+ await rancageSupabase.auth.signOut();rancageCurrentUser=null;rancageCurrentProfile=null;await rancageLoadPriceContext();
+ renderDangdutPackages();renderDangdutRoster();renderAdatSection();renderKursusSection();renderKostumSection();updateCalculator();
+ document.getElementById("rancageWorkspace").classList.add("hidden");document.getElementById("rancageAuthArea").classList.remove("hidden");rancageShowLogin();showToast("Anda telah keluar dari akun.");
+}
+async function rancageInitialize(){
+ const s=await rancageSupabase.auth.getSession();
+ if(s.data&&s.data.session){rancageCurrentUser=s.data.session.user;const p=await rancageSupabase.from("rancage_profiles").select("user_id,display_name,role,is_approved").eq("user_id",rancageCurrentUser.id).maybeSingle();
+  if(p.data&&(p.data.role==="admin"||(p.data.role==="personil"&&p.data.is_approved)))rancageCurrentProfile=p.data;else{await rancageSupabase.auth.signOut();rancageCurrentUser=null;}
+ }
+ await rancageLoadPriceContext();
+ const official=document.getElementById("officialUnlock");if(official){official.addEventListener("click",function(){rancageOfficialTapCount++;clearTimeout(rancageOfficialTapTimer);rancageOfficialTapTimer=setTimeout(()=>rancageOfficialTapCount=0,2200);if(rancageOfficialTapCount>=5){rancageOfficialTapCount=0;rancageOpenPanel();}});official.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();official.click();}});}
+}
+
+
     // Jalankan Aplikasi saat DOM siap
     document.addEventListener('DOMContentLoaded', initApp);
   </script>
+
+<div id="rancageAdminPanel" class="hidden fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm overflow-y-auto p-3 sm:p-6">
+ <div class="max-w-4xl mx-auto my-2 bg-[#FDFBF7] rounded-3xl shadow-2xl border-2 border-[#D4AF37] overflow-hidden">
+  <div class="bg-gradient-to-r from-[#2E092F] via-[#4A154B] to-[#2E092F] text-white p-4 flex items-center justify-between gap-3">
+   <div><div class="text-[10px] uppercase tracking-[.2em] text-[#F3E5AB]">Sanggar Seni Rancagé Al-Batukasuri</div><h2 class="font-bold text-lg text-[#F3E5AB]">Panel Admin & Personil</h2><p id="rancagePanelIdentity" class="text-xs text-purple-100">Masuk untuk mengelola harga</p></div>
+   <button type="button" onclick="rancageClosePanel()" class="w-10 h-10 rounded-xl bg-white/10 border border-[#D4AF37]/50 text-[#F3E5AB]"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div id="rancageAuthArea" class="p-4 sm:p-6">
+   <div id="rancageLoginBox" class="max-w-md mx-auto bg-white rounded-2xl border border-purple-100 p-4 space-y-3">
+    <h3 class="font-bold text-[#4A154B]">Login Pengelola</h3>
+    <form onsubmit="rancageSubmitLogin(event)" class="space-y-3">
+     <input id="rancageLoginEmail" type="email" required autocomplete="username" placeholder="Email" class="w-full border rounded-xl p-3 text-sm">
+     <input id="rancageLoginPassword" type="password" required autocomplete="current-password" placeholder="Kata sandi" class="w-full border rounded-xl p-3 text-sm">
+     <button class="w-full rounded-xl p-3 bg-[#4A154B] text-white font-bold" type="submit">Masuk</button>
+    </form>
+    <p class="text-xs text-gray-500">Admin utama masuk dengan akun terdaftar. Personil harus mendaftar dan menunggu persetujuan Admin Utama.</p>
+    <button type="button" onclick="rancageShowRegister()" class="text-sm text-[#4A154B] font-bold underline">Daftar akun personil</button>
+    <p id="rancageAuthMessage" class="hidden text-xs text-red-600"></p>
+   </div>
+   <div id="rancageRegisterBox" class="hidden max-w-md mx-auto bg-white rounded-2xl border border-purple-100 p-4 space-y-3">
+    <h3 class="font-bold text-[#4A154B]">Pendaftaran Personil</h3>
+    <form onsubmit="rancageSubmitSignup(event)" class="space-y-3">
+     <input id="rancageRegisterName" required maxlength="80" placeholder="Nama personil" class="w-full border rounded-xl p-3 text-sm">
+     <input id="rancageRegisterEmail" type="email" required autocomplete="email" placeholder="Email aktif" class="w-full border rounded-xl p-3 text-sm">
+     <input id="rancageRegisterPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="Kata sandi (minimal 8 karakter)" class="w-full border rounded-xl p-3 text-sm">
+     <button class="w-full rounded-xl p-3 bg-[#4A154B] text-white font-bold" type="submit">Kirim Pendaftaran</button>
+    </form>
+    <button type="button" onclick="rancageShowLogin()" class="text-sm text-[#4A154B] font-bold underline">Kembali ke login</button>
+    <p id="rancageRegisterMessage" class="hidden text-xs text-red-600"></p>
+   </div>
+  </div>
+  <div id="rancageWorkspace" class="hidden p-3 sm:p-5 space-y-4">
+   <div class="flex flex-wrap items-center justify-between gap-2 bg-white rounded-2xl border border-[#D4AF37]/50 p-3">
+    <div><span id="rancageRolePill" class="text-[10px] uppercase tracking-wider font-bold text-[#AA820A]">PENGELOLA</span><div id="rancageWorkspaceName" class="text-sm font-extrabold text-[#4A154B]"></div></div>
+    <button type="button" onclick="rancageLogout()" class="text-xs px-3 py-2 rounded-xl bg-red-50 text-red-700 font-bold border border-red-100">Keluar akun</button>
+   </div>
+   <div class="flex flex-wrap gap-2">
+    <button type="button" onclick="rancageSetPanelTab('prices')" class="px-3 py-2 rounded-xl text-xs font-bold bg-[#4A154B] text-white">Pengaturan Harga</button>
+    <button id="rancageApprovalTab" type="button" onclick="rancageSetPanelTab('approvals')" class="hidden px-3 py-2 rounded-xl text-xs font-bold bg-white border text-[#4A154B]">Pendaftaran Personil</button>
+    <button id="rancageLinkTab" type="button" onclick="rancageSetPanelTab('link')" class="hidden px-3 py-2 rounded-xl text-xs font-bold bg-white border text-[#4A154B]">Link Pelanggan Saya</button>
+   </div>
+   <div id="rancagePanelContent" class="space-y-4"></div>
+   <div id="rancageConfirmReset" class="hidden fixed inset-0 z-[110] bg-black/60 items-center justify-center p-4">
+    <div class="max-w-sm w-full bg-white rounded-2xl p-5 space-y-3 border-2 border-[#D4AF37]">
+     <h3 class="font-bold text-[#4A154B]">Kembali ke Harga Dasar?</h3><p class="text-sm text-gray-600">Semua perubahan harga pribadi Anda akan dihapus. Harga akan mengikuti harga dasar terbaru dari Admin Utama.</p>
+     <div class="flex gap-2 justify-end"><button type="button" onclick="rancageCancelReset()" class="px-3 py-2 rounded-xl border text-sm">Batal</button><button type="button" onclick="rancageConfirmReset()" class="px-3 py-2 rounded-xl bg-[#4A154B] text-white text-sm font-bold">Ya, Kembali</button></div>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
 </body>
 </html>
 
