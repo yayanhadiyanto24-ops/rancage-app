@@ -87,6 +87,35 @@
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{width:100%;max-width:100%;overflow-x:hidden}
+  img,svg,video{max-width:100%} input,select,textarea,button{max-width:100%}
+  table{width:100%;border-collapse:collapse} th,td{overflow-wrap:anywhere}
+  @media(max-width:640px){
+    header .max-w-7xl{padding-left:8px!important;padding-right:8px!important}
+    header .max-w-7xl:first-child{gap:8px!important;align-items:stretch!important}
+    header .max-w-7xl:first-child>div:first-child{justify-content:flex-start!important;text-align:left!important}
+    header .max-w-7xl:first-child>div:first-child .w-12{width:38px;height:38px}
+    header .max-w-7xl:first-child>div:first-child h1{font-size:15px}
+    header .max-w-7xl:first-child>div:last-child{display:grid!important;grid-template-columns:1fr 1fr;gap:6px!important}
+    header .max-w-7xl:first-child>div:last-child button{justify-content:center;padding:7px 5px!important;font-size:10px!important}
+    nav{overflow:visible!important} nav>div{min-width:0!important;width:100%;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px!important;padding:6px!important}
+    nav .nav-btn{min-width:0;padding:7px 5px!important;justify-content:center!important;font-size:10px!important;line-height:1.2}
+    nav .nav-btn span{white-space:normal;text-align:center}
+    main{padding:10px 7px!important} main>.grid{gap:10px!important}
+    main .p-5,main .p-6{padding:10px!important} main .p-4{padding:9px!important}
+    main h2{font-size:17px!important;line-height:1.25}
+    #dangdut-packages-container,#kursus-container,#kostum-container{grid-template-columns:1fr 1fr!important;gap:7px!important}
+    #adat-ambu-services-container{grid-template-columns:1fr!important;gap:6px!important}
+    #rancageAdminPanel{padding:0!important} #rancageAdminPanel>div{margin:0!important;min-height:100vh;border-radius:0!important;border-width:0!important}
+    #rancageWorkspace{padding:8px!important} #rancagePanelContent{min-width:0!important;width:100%;overflow-x:hidden}
+    #rancagePanelContent>section{padding:8px!important;border-radius:10px!important}
+    #rancagePanelContent table{min-width:0!important;table-layout:fixed;font-size:10px!important}
+    #rancagePanelContent th,#rancagePanelContent td{padding:4px 3px!important;vertical-align:middle}
+    #rancagePanelContent input,#rancagePanelContent select{min-width:0!important;width:100%!important;max-width:100%!important;padding:5px!important;font-size:11px!important}
+    #rancagePanelContent .overflow-x-auto{overflow-x:hidden!important}
+    #rancagePanelContent [data-price-access]{padding:7px 3px!important;font-size:10px!important;line-height:1.2}
+  }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -154,7 +183,7 @@
     </nav>
   </header>
   <!-- KONTEN UTAMA -->
-  <main class="max-w-7xl mx-auto w-full px-4 py-6 sm:py-8 flex-grow">
+  <main class="max-w-7xl mx-auto w-full px-2 sm:px-4 py-3 sm:py-8 flex-grow">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
       <!-- KOLOM KIRI (7 KOLOM): MENU KATEGORI LAYANAN -->
@@ -834,6 +863,7 @@
     // 3. INISIALISASI RENDER UI
     async function initApp() {
       await rancageInitialize();
+      if(!window._rancageDefaultAdatApplied){state.adatPersonil['penari_putri']={qty:1,tier:'mahir'};state.adatPersonil['pamayung']={qty:1,tier:'mahir'};window._rancageDefaultAdatApplied=true;}
       renderDangdutPackages();
       renderAdatSection();
       renderKursusSection();
@@ -1630,8 +1660,8 @@ function rancageRenderPrices(){
  const accessNames=["Hiburan Dangdut","Upacara Adat — Personil","Layanan Khusus Ambu","Kursus Seni","Sewa Kostum","Jatah Pimpro"];
  const accessIcons=["🎤","🎎","🌿","🎨","👘","💰"];
  const access=document.createElement("div");
- access.className="grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-2xl border border-[#D4AF37]/60 bg-[#fffaf0] p-3";
- access.innerHTML='<div class="col-span-2 sm:col-span-3 mb-1"><b class="text-sm text-[#4A154B]">Akses Tabel Pengaturan Harga</b><p class="text-[10px] text-gray-500">Ketuk salah satu tombol untuk membuka tabel yang diperlukan.</p></div>'+accessNames.map((name,i)=>'<button type="button" data-price-access="'+i+'" onclick="rancageTogglePriceSection('+i+')" class="rounded-xl border border-[#D4AF37] bg-white px-2 py-3 text-xs font-extrabold text-[#4A154B] shadow-sm active:scale-[.98]">'+accessIcons[i]+' '+name+'</button>').join("");
+ access.className="grid grid-cols-3 gap-1.5 rounded-xl border border-[#D4AF37]/60 bg-[#fffaf0] p-2";access.dataset.priceAccessMenu="1";
+ access.innerHTML='<div class="col-span-2 sm:col-span-3 mb-1"><b class="text-sm text-[#4A154B]">Akses Tabel Pengaturan Harga</b><p class="text-[10px] text-gray-500">Ketuk salah satu tombol untuk membuka tabel yang diperlukan.</p></div>'+accessNames.map((name,i)=>'<button type="button" data-price-access="'+i+'" onclick="rancageTogglePriceSection('+i+')" class="rounded-lg border border-[#D4AF37] bg-white px-1 py-2 text-[10px] font-bold text-[#4A154B]">'+name.replace(" — "," ")+'</button>').join("")+'<button type="button" onclick="rancageShareCustomerLink()" class="col-span-3 rounded-lg bg-[#128C4A] px-2 py-2 text-[11px] font-bold text-white">Bagikan ke WhatsApp</button>';
  const info=root.firstElementChild;
  if(info)info.insertAdjacentElement("afterend",access);else root.prepend(access);
  sections.forEach((section,i)=>{section.dataset.priceSection=String(i);section.hidden=true;});
@@ -1639,7 +1669,7 @@ function rancageRenderPrices(){
 function rancageTogglePriceSection(index){
  const root=document.getElementById("rancagePanelContent");
  if(!root)return;
- const sections=Array.from(root.querySelectorAll(":scope > section[data-price-section]"));
+ const sections=Array.from(root.children).filter(el=>el.matches&&el.matches("section[data-price-section]"));
  const target=sections.find(el=>Number(el.dataset.priceSection)===Number(index));
  if(!target)return;
  const wasOpen=!target.hidden;
