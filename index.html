@@ -866,7 +866,7 @@
     // 3. INISIALISASI RENDER UI
     async function initApp() {
       await rancageInitialize();
-      DATA_ADAT_PERSONIL.forEach(item=>{state.adatPersonil[item.id]=state.adatPersonil[item.id]||{qty:0,tier:'mahir'};if(isMandatoryAdatPersonil(item))state.adatPersonil[item.id].qty=Math.max(1,Number(state.adatPersonil[item.id].qty)||0);});
+      DATA_ADAT_PERSONIL.forEach(item=>{state.adatPersonil[item.id]=state.adatPersonil[item.id]||{qty:0,tier:'mahir'};});
       renderDangdutPackages();
       renderAdatSection();
       renderKursusSection();
@@ -1394,7 +1394,7 @@
       state.dangdut.roster = [];
       state.comboDiscountOverride = 0;
       document.getElementById('dangdut-customizer').classList.add('hidden');
-      DATA_ADAT_PERSONIL.forEach(i => state.adatPersonil[i.id] = { qty: isMandatoryAdatPersonil(i) ? 1 : 0, tier: 'mahir' });
+      DATA_ADAT_PERSONIL.forEach(i => state.adatPersonil[i.id] = { qty: 0, tier: 'mahir' });
       state.ambuServices = {};
       state.kursus = {};
       state.kostum = {};
