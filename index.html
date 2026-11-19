@@ -421,11 +421,15 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label class="text-[11px] font-medium text-gray-600 block mb-1">Nama Pemesan *</label>
-                  <input type="text" id="cust-name" placeholder="Contoh: Ibu Siti / Kang Dedi" class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-rancage-purple" />
+                  <input type="text" id="cust-name" required placeholder="Contoh: Ibu Siti / Kang Dedi" class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-rancage-purple" />
                 </div>
                 <div>
                   <label class="text-[11px] font-medium text-gray-600 block mb-1">Tanggal Acara *</label>
-                  <input type="date" id="cust-date" class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-rancage-purple" />
+                  <input type="date" id="cust-date" required class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-rancage-purple" />
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="text-[11px] font-medium text-gray-600 block mb-1">Nomor WhatsApp Pemesan *</label>
+                  <input type="tel" id="cust-phone" required inputmode="tel" autocomplete="tel" maxlength="20" placeholder="Contoh: 081234567890" class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-rancage-purple" />
                 </div>
               </div>
               <div>
@@ -1346,12 +1350,19 @@
 
       const name = document.getElementById('cust-name').value.trim();
       const date = document.getElementById('cust-date').value;
+      const customerPhone = document.getElementById('cust-phone')?.value.trim() || '';
+      const phoneDigits = customerPhone.replace(/\D/g, '');
       const location = document.getElementById('cust-location').value.trim() || '-';
       const notes = document.getElementById('cust-notes').value.trim() || '-';
 
-      if (!name || !date) {
-        showToast('Mohon isi Nama Pemesan dan Tanggal Acara!');
-        document.getElementById('cust-name').focus();
+      if (!name || !date || !customerPhone) {
+        showToast('Mohon isi Nama Pemesan, Tanggal Acara, dan Nomor WhatsApp!');
+        (!name ? document.getElementById('cust-name') : !date ? document.getElementById('cust-date') : document.getElementById('cust-phone')).focus();
+        return;
+      }
+      if (phoneDigits.length < 8 || phoneDigits.length > 15) {
+        showToast('Nomor WhatsApp tidak valid. Periksa kembali nomornya.');
+        document.getElementById('cust-phone').focus();
         return;
       }
 
@@ -1359,6 +1370,7 @@
       message += `Saya ingin melakukan pemesanan / konsultasi layanan dengan rincian berikut:\n\n`;
       message += `*DATA PEMESAN*\n`;
       message += `• Nama: ${name}\n`;
+      message += `• WhatsApp Pemesan: ${customerPhone}\n`;
       message += `• Tanggal Acara: ${date}\n`;
       message += `• Lokasi: ${location}\n`;
       message += `• Catatan: ${notes}\n\n`;
@@ -1392,7 +1404,6 @@
         discount: summary.discount,
         grand_total: summary.grandTotal
       };
-      const customerPhone = (document.getElementById('cust-phone')?.value || '').trim() || null;
       const orderPayload = {
         customer_name: name,
         customer_phone: customerPhone,
