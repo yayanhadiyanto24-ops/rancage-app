@@ -1668,9 +1668,30 @@ async function rancageSetApproval(id,approved){
  
  showToast(approved?"Personil disetujui.":"Akses personil dinonaktifkan.");rancageRenderApprovals();
 }
-function rancageShowLogin(){document.getElementById("rancageLoginBox").classList.remove("hidden");document.getElementById("rancageRegisterBox").classList.add("hidden");}
-function rancageShowRegister(){document.getElementById("rancageLoginBox").classList.add("hidden");document.getElementById("rancageRegisterBox").classList.remove("hidden");}
+function rancageHideAuthBoxes(){["rancageLoginBox","rancageRegisterBox","rancageForgotPasswordBox","rancageUpdatePasswordBox"].forEach(id=>document.getElementById(id).classList.add("hidden"));}
+function rancageShowLogin(){rancageHideAuthBoxes();document.getElementById("rancageLoginBox").classList.remove("hidden");}
+function rancageShowRegister(){rancageHideAuthBoxes();document.getElementById("rancageRegisterBox").classList.remove("hidden");}
+function rancageShowForgotPassword(){rancageHideAuthBoxes();document.getElementById("rancageForgotPasswordBox").classList.remove("hidden");document.getElementById("rancageForgotEmail").value=document.getElementById("rancageLoginEmail").value.trim();}
 function rancageAuthError(msg){const e=document.getElementById("rancageAuthMessage");e.textContent=msg;e.classList.remove("hidden");}
+async function rancageSubmitForgotPassword(e){
+ e.preventDefault();const email=document.getElementById("rancageForgotEmail").value.trim().toLowerCase(),el=document.getElementById("rancageForgotMessage");el.classList.add("hidden");
+ const redirectTo=window.location.origin+window.location.pathname;
+ const r=await rancageSupabase.auth.resetPasswordForEmail(email,{redirectTo});
+ if(r.error){el.textContent="Permintaan belum berhasil dikirim. Periksa koneksi atau coba lagi.";el.className="text-xs text-red-600";return;}
+ el.textContent="Jika email terdaftar, tautan pemulihan akan dikirim. Periksa Kotak Masuk dan folder Spam.";el.className="text-xs text-green-700";
+}
+async function rancageSubmitNewPassword(e){
+ e.preventDefault();const password=document.getElementById("rancageNewPassword").value,confirm=document.getElementById("rancageConfirmNewPassword").value,el=document.getElementById("rancageNewPasswordMessage");
+ if(password.length<8){el.textContent="Kata sandi minimal 8 karakter.";el.className="text-xs text-red-600";return;}
+ if(password!==confirm){el.textContent="Kedua kata sandi belum sama.";el.className="text-xs text-red-600";return;}
+ const r=await rancageSupabase.auth.updateUser({password});
+ if(r.error){el.textContent="Kata sandi belum berhasil diperbarui. Buka kembali tautan pemulihan dari email.";el.className="text-xs text-red-600";return;}
+ el.textContent="Kata sandi berhasil diperbarui. Membuka panel pengelola...";el.className="text-xs text-green-700";
+ await rancageAcceptSession(r.data.user);
+}
+rancageSupabase.auth.onAuthStateChange((event,session)=>{
+ if(event==="PASSWORD_RECOVERY"&&session){rancageHideAuthBoxes();document.getElementById("rancageUpdatePasswordBox").classList.remove("hidden");}
+});
 async function rancageSubmitLogin(e){
  e.preventDefault();const email=document.getElementById("rancageLoginEmail").value.trim().toLowerCase(),password=document.getElementById("rancageLoginPassword").value;
  const r=await rancageSupabase.auth.signInWithPassword({email:email,password:password});if(r.error){rancageAuthError("Login gagal. Periksa email dan kata sandi.");return;}await rancageAcceptSession(r.data.user);
@@ -1732,8 +1753,30 @@ async function rancageInitialize(){
      <button class="w-full rounded-xl p-3 bg-[#4A154B] text-white font-bold" type="submit">Masuk</button>
     </form>
     <p class="text-xs text-gray-500">Admin utama masuk dengan akun terdaftar. Personil harus mendaftar dan menunggu persetujuan Admin Utama.</p>
-    <button type="button" onclick="rancageShowRegister()" class="text-sm text-[#4A154B] font-bold underline">Daftar akun personil</button>
+    <div class="flex flex-wrap gap-4 items-center">
+     <button type="button" onclick="rancageShowForgotPassword()" class="text-sm text-[#4A154B] underline">Lupa kata sandi?</button>
+     <button type="button" onclick="rancageShowRegister()" class="text-sm text-[#4A154B] font-bold underline">Daftar akun personil</button>
+    </div>
     <p id="rancageAuthMessage" class="hidden text-xs text-red-600"></p>
+   </div>
+   <div id="rancageForgotPasswordBox" class="hidden max-w-md mx-auto bg-white rounded-2xl border border-purple-100 p-4 space-y-3">
+    <h3 class="font-bold text-[#4A154B]">Pulihkan Kata Sandi</h3>
+    <p class="text-sm text-gray-600">Masukkan email akun. Kami akan mengirim tautan untuk membuat kata sandi baru.</p>
+    <form onsubmit="rancageSubmitForgotPassword(event)" class="space-y-3">
+     <input id="rancageForgotEmail" type="email" required autocomplete="email" placeholder="Email akun" class="w-full border rounded-xl p-3 text-sm">
+     <button class="w-full rounded-xl p-3 bg-[#4A154B] text-white font-bold" type="submit">Kirim Tautan Pemulihan</button>
+    </form>
+    <p id="rancageForgotMessage" class="hidden text-xs text-green-700"></p>
+    <button type="button" onclick="rancageShowLogin()" class="text-sm text-[#4A154B] font-bold underline">Kembali ke login</button>
+   </div>
+   <div id="rancageUpdatePasswordBox" class="hidden max-w-md mx-auto bg-white rounded-2xl border border-purple-100 p-4 space-y-3">
+    <h3 class="font-bold text-[#4A154B]">Buat Kata Sandi Baru</h3>
+    <form onsubmit="rancageSubmitNewPassword(event)" class="space-y-3">
+     <input id="rancageNewPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="Kata sandi baru (minimal 8 karakter)" class="w-full border rounded-xl p-3 text-sm">
+     <input id="rancageConfirmNewPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="Ulangi kata sandi baru" class="w-full border rounded-xl p-3 text-sm">
+     <button class="w-full rounded-xl p-3 bg-[#4A154B] text-white font-bold" type="submit">Simpan Kata Sandi Baru</button>
+    </form>
+    <p id="rancageNewPasswordMessage" class="hidden text-xs"></p>
    </div>
    <div id="rancageRegisterBox" class="hidden max-w-md mx-auto bg-white rounded-2xl border border-purple-100 p-4 space-y-3">
     <h3 class="font-bold text-[#4A154B]">Pendaftaran Personil</h3>
