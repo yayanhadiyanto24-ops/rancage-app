@@ -875,7 +875,7 @@
             </div>
             <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
               <span class="text-xs text-gray-500">Mulai dari</span>
-              <span class="font-extrabold text-sm text-rancage-purple">${formatRupiah(pkg.personilCount * state.dangdut.ratePerPerson)}</span>
+              <span class="font-extrabold text-sm text-rancage-purple">${formatRupiah(pkg.defaultPrice)}</span>
             </div>
           </div>
         `;
@@ -1183,11 +1183,11 @@
       if (state.dangdut.packageId && state.dangdut.roster.length > 0) {
         hasDangdut = true;
         const pkg = DATA_DANGDUT_PACKAGES.find(p => p.id === state.dangdut.packageId);
-        const totalDangdut = state.dangdut.roster.length * state.dangdut.ratePerPerson;
+        const totalDangdut = Math.max(0, (Number(pkg.defaultPrice) || 0) + (state.dangdut.roster.length - pkg.personilCount) * state.dangdut.ratePerPerson);
         cartItems.push({
           category: 'Hiburan Dangdut',
           name: `${pkg.name} (${state.dangdut.roster.length} Personil)`,
-          detail: `Tarif ${formatRupiah(state.dangdut.ratePerPerson)}/org`,
+          detail: `Harga paket dasar ${formatRupiah(pkg.defaultPrice)}; personil tambahan ${formatRupiah(state.dangdut.ratePerPerson)}/org`,
           price: totalDangdut,
           onRemove: () => clearDangdutPackage()
         });
@@ -1511,7 +1511,8 @@ function rancageBuildDefault(remote){
  DATA_AMBU_SERVICES.forEach(i=>ambu[i.id]={price:Number(i.price)||0});
  DATA_KURSUS.forEach(i=>kursus[i.id]={price:Number(i.price)||0});
  DATA_KOSTUM.forEach(i=>kostum[i.id]={price:Number(i.price)||0});
- return {dangdut:{ratePerPerson:Number(state.dangdut.ratePerPerson)||400000},adat:{personil:personil,ambu:ambu},kursus:kursus,kostum:kostum,fees:{
+ const packagePrices={};DATA_DANGDUT_PACKAGES.forEach(i=>packagePrices[i.id]={price:Number(i.defaultPrice)||0});
+ return {dangdut:{ratePerPerson:Number(state.dangdut.ratePerPerson)||400000,packagePrices:packagePrices},adat:{personil:personil,ambu:ambu},kursus:kursus,kostum:kostum,fees:{
   dangdut:dfees,
   adat:remote&&remote.adat&&remote.adat.serviceFee?rancageClone(remote.adat.serviceFee):{type:"percent",value:10},
   gabungan:remote&&remote.gabungan&&remote.gabungan.serviceFee?rancageClone(remote.gabungan.serviceFee):{type:"percent",value:10},
@@ -1521,6 +1522,7 @@ function rancageBuildDefault(remote){
 }
 function rancageApply(cfg){
  state.dangdut.ratePerPerson=Math.max(0,Number(cfg.dangdut.ratePerPerson)||0);
+ DATA_DANGDUT_PACKAGES.forEach(i=>{const x=cfg.dangdut.packagePrices&&cfg.dangdut.packagePrices[i.id];if(x&&x.price!=null)i.defaultPrice=Math.max(0,Number(x.price)||0);});
  DATA_ADAT_PERSONIL.forEach(i=>{const x=cfg.adat.personil[i.id];if(!x)return;if(i.hasTier&&x.tiers)Object.keys(i.tiers).forEach(t=>{if(x.tiers[t])i.tiers[t].price=Math.max(0,Number(x.tiers[t].price)||0);});else if(x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
  DATA_AMBU_SERVICES.forEach(i=>{const x=cfg.adat.ambu[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
  DATA_KURSUS.forEach(i=>{const x=cfg.kursus[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
@@ -1557,7 +1559,9 @@ function rancageFeeInput(label,path,fee){const v=fee||{type:"nominal",value:0};r
 function rancageRenderPrices(){
  const admin=rancageCurrentProfile.role==="admin",c=admin?rancageBasePriceConfig:rancageActivePriceConfig,p=[];
  p.push('<div class="bg-white rounded-2xl border border-[#D4AF37]/50 p-4 space-y-3"><h3 class="font-extrabold text-[#4A154B]">Harga Layanan</h3><p class="text-xs text-gray-500">'+(admin?"Harga dasar ini menjadi acuan semua personil.":"Perubahan ini hanya berlaku untuk akun Anda dan pelanggan melalui link pribadi Anda.")+'</p>');
- p.push('<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">'+rancagePriceInput("Tarif per personil Dangdut","dangdut.ratePerPerson",c.dangdut.ratePerPerson)+'</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Upacara Adat — Personil</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
+ p.push('<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">'+rancagePriceInput("Tarif personil tambahan Dangdut","dangdut.ratePerPerson",c.dangdut.ratePerPerson));
+ DATA_DANGDUT_PACKAGES.forEach(i=>p.push(rancagePriceInput("Harga dasar paket — "+i.name,"dangdut.packagePrices."+i.id+".price",c.dangdut.packagePrices[i.id].price)));
+ p.push('</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Upacara Adat — Personil</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
  DATA_ADAT_PERSONIL.forEach(i=>{const x=c.adat.personil[i.id];if(i.hasTier)Object.keys(i.tiers).forEach(t=>p.push(rancagePriceInput(i.name+" — "+(i.tiers[t].label||t),"adat.personil."+i.id+".tiers."+t+".price",x.tiers[t].price)));else p.push(rancagePriceInput(i.name,"adat.personil."+i.id+".price",x.price));});
  p.push('</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Layanan Ambu</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
  DATA_AMBU_SERVICES.forEach(i=>p.push(rancagePriceInput(i.name,"adat.ambu."+i.id+".price",c.adat.ambu[i.id].price)));
