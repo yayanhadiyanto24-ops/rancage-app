@@ -928,7 +928,7 @@
             <span class="font-medium text-gray-800">${role}</span>
           </div>
           <div class="flex items-center gap-3">
-            <span class="text-gray-500 font-medium">${formatRupiah(state.dangdut.ratePerPerson)}</span>
+            <span class="text-gray-500 font-medium">${idx >= (DATA_DANGDUT_PACKAGES.find(p => p.id === state.dangdut.packageId)?.personilCount || 0) ? formatRupiah(state.dangdut.ratePerPerson) : 'Termasuk paket'}</span>
             ${state.dangdut.roster.length > 1 ? `
               <button onclick="removeDangdutPersonil(${idx})" class="text-red-500 hover:text-red-700" title="Hapus personil ini">
                 <i class="fa-solid fa-trash-can"></i>
