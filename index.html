@@ -663,7 +663,7 @@
       'Penyanyi Tambahan', 'Pemain Suling', 'Pemain Gitar', 'MC Acara', 'Penari Latar'
     ];
 
-    const DATA_ADAT_PERSONIL = [
+    let DATA_ADAT_PERSONIL = [
       {
         id: 'lengser',
         name: 'Ki Lengser',
@@ -1512,7 +1512,7 @@ function rancageBuildDefault(remote){
  DATA_KURSUS.forEach(i=>kursus[i.id]={price:Number(i.price)||0});
  DATA_KOSTUM.forEach(i=>kostum[i.id]={price:Number(i.price)||0});
  const packagePrices={};DATA_DANGDUT_PACKAGES.forEach(i=>packagePrices[i.id]={price:Number(i.defaultPrice)||0});
- return {dangdut:{ratePerPerson:Number(state.dangdut.ratePerPerson)||400000,packagePrices:packagePrices},adat:{personil:personil,ambu:ambu},kursus:kursus,kostum:kostum,fees:{
+ return {dangdut:{ratePerPerson:Number(state.dangdut.ratePerPerson)||400000,packagePrices:packagePrices},adat:{personil:personil,rows:DATA_ADAT_PERSONIL.map(i=>({id:i.id,name:i.name,desc:i.desc||'',qty:Number(i.max)||1,price:Number(i.price!=null?i.price:(i.tiers&&i.tiers.mahir&&i.tiers.mahir.price))||0,hasTier:!!i.hasTier,tiers:i.hasTier?rancageClone(i.tiers):null})),ambu:ambu},kursus:kursus,kostum:kostum,fees:{
   dangdut:dfees,
   adat:remote&&remote.adat&&remote.adat.serviceFee?rancageClone(remote.adat.serviceFee):{type:"percent",value:10},
   gabungan:remote&&remote.gabungan&&remote.gabungan.serviceFee?rancageClone(remote.gabungan.serviceFee):{type:"percent",value:10},
@@ -1521,6 +1521,7 @@ function rancageBuildDefault(remote){
  }};
 }
 function rancageApply(cfg){
+ if(cfg.adat&&Array.isArray(cfg.adat.rows)){DATA_ADAT_PERSONIL.splice(0,DATA_ADAT_PERSONIL.length,...cfg.adat.rows.map((r,i)=>({id:r.id||('personil_'+i),name:r.name||('Personil '+(i+1)),desc:r.desc||'',max:Math.max(1,Number(r.qty)||1),hasTier:!!r.hasTier,price:Math.max(0,Number(r.price)||0),tiers:r.hasTier&&r.tiers?rancageClone(r.tiers):undefined})));}
  state.dangdut.ratePerPerson=Math.max(0,Number(cfg.dangdut.ratePerPerson)||0);
  DATA_DANGDUT_PACKAGES.forEach(i=>{const x=cfg.dangdut.packagePrices&&cfg.dangdut.packagePrices[i.id];if(x&&x.price!=null)i.defaultPrice=Math.max(0,Number(x.price)||0);});
  DATA_ADAT_PERSONIL.forEach(i=>{const x=cfg.adat.personil[i.id];if(!x)return;if(i.hasTier&&x.tiers)Object.keys(i.tiers).forEach(t=>{if(x.tiers[t])i.tiers[t].price=Math.max(0,Number(x.tiers[t].price)||0);});else if(x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
@@ -1571,18 +1572,20 @@ function rancageRenderPrices(){
  rows.push(row(['+','<b>Personil tambahan</b>','Sesuai kebutuhan','Tarif per orang',priceInput('Tarif personil tambahan Dangdut','dangdut.ratePerPerson',c.dangdut.ratePerPerson)]));
  p.push(table('1. HIBURAN DANGDUT','Rincian formasi personil setiap paket. Harga paket adalah harga dasar formasi; personil di luar formasi dikenakan tarif tambahan per orang.',['No.','Paket / rincian personil','Jumlah','Jenis harga','Harga (Rp)'],rows));
  rows=[];
- DATA_ADAT_PERSONIL.forEach((item,idx)=>{
-  if(item.hasTier){
-   Object.keys(item.tiers).forEach((tier,j)=>{
-    const x=c.adat.personil[item.id].tiers[tier];
-    rows.push(row([j===0?idx+1:'',j===0?'<b>'+item.name+'</b><div class="text-[10px] text-gray-500">'+item.desc+'</div>':'<span class="pl-3">↳ '+item.name+'</span>',item.max+' maks.',item.tiers[tier].label,priceInput(item.name+' '+tier,'adat.personil.'+item.id+'.tiers.'+tier+'.price',x.price)]));
-   });
+ const adatRows=Array.isArray(c.adat.rows)?c.adat.rows:DATA_ADAT_PERSONIL.map(i=>({id:i.id,name:i.name,desc:i.desc||'',qty:i.max,price:i.price||0,hasTier:!!i.hasTier,tiers:i.tiers||null}));
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div class="flex items-center justify-between gap-3"><div><h3 class="font-extrabold text-[#4A154B]">2. UPACARA ADAT — PERSONIL</h3><p class="text-[11px] text-gray-500">Ubah jumlah baris untuk menambah atau mengurangi jenis personil. Nama, keterangan, banyak, dan harga satuan dapat diedit. Jumlah biaya dihitung otomatis.</p></div><label class="text-[10px] font-bold text-[#4A154B] text-center">Jumlah baris<input id="rancageAdatRowCount" type="number" min="1" max="30" value="'+adatRows.length+'" onchange="rancageResizeAdatRows(this.value)" class="mt-1 w-16 rounded-lg border border-purple-200 p-2 text-center text-sm font-extrabold"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[760px] text-xs text-left"><thead class="bg-[#4A154B] text-white"><tr><th class="p-2">No.</th><th class="p-2">Jenis personil</th><th class="p-2">Keterangan</th><th class="p-2">Banyak</th><th class="p-2">Tingkat / harga satuan</th><th class="p-2 text-right">Jumlah (otomatis)</th></tr></thead><tbody>');
+ adatRows.forEach((item,idx)=>{
+  const name='<input type="text" data-price-path="adat.rows.'+idx+'.name" value="'+rancageEscapeHtml(item.name)+'" class="w-44 rounded-lg border border-purple-200 p-2 font-semibold">';
+  const desc='<input type="text" data-price-path="adat.rows.'+idx+'.desc" value="'+rancageEscapeHtml(item.desc||'')+'" class="w-48 rounded-lg border border-purple-200 p-2">';
+  const qty='<input type="number" min="1" max="100" data-price-path="adat.rows.'+idx+'.qty" value="'+(Number(item.qty)||1)+'" class="w-20 rounded-lg border border-purple-200 p-2 text-center font-bold">';
+  if(item.hasTier&&item.tiers){
+   Object.keys(item.tiers).forEach((tier,j)=>{const t=item.tiers[tier],price=priceInput(item.name+' '+t.label,'adat.rows.'+idx+'.tiers.'+tier+'.price',t.price);rows.push('<tr class="border-t align-top"><td class="p-2">'+(j===0?idx+1:'')+'</td><td class="p-2">'+(j===0?name:'')+'</td><td class="p-2">'+(j===0?desc:'')+'</td><td class="p-2">'+(j===0?qty:'')+'</td><td class="p-2"><div class="mb-1 text-[10px] text-gray-500">'+rancageEscapeHtml(t.label)+'</div>'+price+'</td><td class="p-2 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(t.price)||0))+'</td></tr>');});
   }else{
-   const x=c.adat.personil[item.id];
-   rows.push(row([idx+1,'<b>'+item.name+'</b><div class="text-[10px] text-gray-500">'+item.desc+'</div>',item.max+' maks.','Harga satuan',priceInput(item.name,'adat.personil.'+item.id+'.price',x.price)]));
+   const price=priceInput(item.name,'adat.rows.'+idx+'.price',item.price);
+   rows.push('<tr class="border-t align-top"><td class="p-2">'+(idx+1)+'</td><td class="p-2">'+name+'</td><td class="p-2">'+desc+'</td><td class="p-2">'+qty+'</td><td class="p-2">'+price+'</td><td class="p-2 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(item.price)||0))+'</td></tr>');
   }
  });
- p.push(table('2. UPACARA ADAT — PERSONIL','Setiap jenis personil memiliki batas jumlah dan harga satuan. Penari memiliki tiga tingkat keahlian.',['No.','Jenis personil','Jumlah maksimal','Tingkat / satuan','Harga satuan (Rp)'],rows));
+ p.push(rows.join('')+'</tbody></table></div></section>');
  rows=[];
  DATA_AMBU_SERVICES.forEach((item,idx)=>rows.push(row([idx+1,'<b>'+item.name+'</b><div class="text-[10px] text-gray-500">'+item.desc+'</div>','Per layanan','Harga satuan',priceInput(item.name,'adat.ambu.'+item.id+'.price',c.adat.ambu[item.id].price)])));
  p.push(table('3. LAYANAN KHUSUS AMBU','Rincian setiap prosesi/pemanduan yang dapat dipilih pelanggan.',['No.','Nama layanan','Satuan','Jenis harga','Harga (Rp)'],rows));
@@ -1603,7 +1606,15 @@ function rancageRenderPrices(){
  p.push('</div><p class="text-[10px] text-gray-500">Tabel dapat digeser ke samping pada layar HP. Perubahan disimpan ke konfigurasi harga Supabase yang sudah digunakan aplikasi.</p>');
  document.getElementById("rancagePanelContent").innerHTML=p.join("");
 }
-function rancageReadPriceForm(){const c=rancageClone(rancageCurrentProfile.role==="admin"?rancageBasePriceConfig:rancageActivePriceConfig);document.querySelectorAll("#rancagePanelContent [data-price-path]").forEach(i=>rancageSetPath(c,i.getAttribute("data-price-path"),i.tagName==="SELECT"?i.value:Math.max(0,Number(i.value)||0)));return c;}
+function rancageResizeAdatRows(value){
+ const c=rancageReadPriceForm(),rows=Array.isArray(c.adat.rows)?c.adat.rows:[];
+ const count=Math.max(1,Math.min(30,parseInt(value,10)||1));
+ while(rows.length<count){const n=rows.length+1;rows.push({id:'personil_custom_'+Date.now()+'_'+n,name:'Personil Baru '+n,desc:'',qty:1,price:0,hasTier:false,tiers:null});}
+ rows.splice(count);c.adat.rows=rows;
+ if(rancageCurrentProfile.role==="admin")rancageBasePriceConfig=rancageClone(c);else rancageActivePriceConfig=rancageClone(c);
+ rancageApply(c);rancageRenderPrices();
+}
+function rancageReadPriceForm(){const c=rancageClone(rancageCurrentProfile.role==="admin"?rancageBasePriceConfig:rancageActivePriceConfig);document.querySelectorAll("#rancagePanelContent [data-price-path]").forEach(i=>rancageSetPath(c,i.getAttribute("data-price-path"),i.type==="number"?Math.max(0,Number(i.value)||0):i.value));return c;}
 async function rancageSavePrices(){
  const next=rancageReadPriceForm();
  try{
