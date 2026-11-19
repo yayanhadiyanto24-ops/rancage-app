@@ -860,6 +860,13 @@
 
     // NAVIGASI TAB
     function switchTab(tabName) {
+      // Tab Upacara Adat adalah pilihan mandiri, bukan Paket Gabungan.
+      // Hapus pilihan Dangdut yang mungkin masih tersisa dari tab sebelumnya.
+      if (tabName === 'adat' && state.dangdut.packageId) {
+        clearDangdutPackage();
+        const comboSelect = document.getElementById('combo-dangdut-select');
+        if (comboSelect) comboSelect.value = '';
+      }
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
       document.getElementById('tab-' + tabName).classList.remove('hidden');
 
