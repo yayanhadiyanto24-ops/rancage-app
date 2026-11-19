@@ -880,23 +880,18 @@
     // RENDER TAB 1: DANGDUT
     function renderDangdutPackages() {
       const container = document.getElementById('dangdut-packages-container');
+      if(rancagePricesUnavailable){container.innerHTML='<p class="col-span-full rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">Harga belum tersedia. Silakan muat ulang setelah konfigurasi harga Admin dapat diakses.</p>';return;}
       container.innerHTML = DATA_DANGDUT_PACKAGES.map(pkg => {
         const isSelected = state.dangdut.packageId === pkg.id;
         return `
-          <div onclick="selectDangdutPackage('${pkg.id}')" class="cursor-pointer rounded-2xl p-4 border-2 transition flex flex-col justify-between ${isSelected ? 'border-rancage-purple bg-rancage-purple/5 shadow-md' : 'border-gray-200 hover:border-rancage-gold bg-white'}">
-            <div>
-              <div class="flex items-center justify-between gap-2 mb-1.5">
-                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${isSelected ? 'bg-rancage-purple text-white' : 'bg-rancage-creamDark text-rancage-purple'}">
-                  ${pkg.personilCount} Personil
-                </span>
-                ${isSelected ? '<i class="fa-solid fa-circle-check text-rancage-purple text-lg"></i>' : '<i class="fa-regular fa-circle text-gray-300 text-lg"></i>'}
-              </div>
-              <h3 class="font-bold text-base text-rancage-purple">${pkg.name}</h3>
-              <p class="text-xs text-gray-600 mt-1 leading-relaxed">${pkg.desc}</p>
+          <div onclick="selectDangdutPackage('${pkg.id}')" class="cursor-pointer rounded-xl px-3 py-2 border transition flex items-center justify-between gap-2 min-h-[58px] ${isSelected ? 'border-rancage-purple bg-rancage-purple/5 shadow-sm' : 'border-gray-200 hover:border-rancage-gold bg-white'}">
+            <div class="min-w-0 flex items-center gap-2">
+              ${isSelected ? '<i class="fa-solid fa-circle-check text-rancage-purple text-sm"></i>' : ''}
+              <h3 class="font-bold text-sm text-rancage-purple leading-tight">${pkg.name}</h3>
             </div>
-            <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-              <span class="text-xs text-gray-500">Mulai dari</span>
-              <span class="font-extrabold text-sm text-rancage-purple">${formatRupiah(pkg.defaultPrice)}</span>
+            <div class="shrink-0 text-right">
+              <span class="block text-[10px] text-gray-500 leading-tight">Mulai Harga</span>
+              <span class="font-extrabold text-sm text-rancage-purple whitespace-nowrap">${formatRupiah(pkg.defaultPrice)}</span>
             </div>
           </div>
         `;
@@ -1023,6 +1018,7 @@
 
     function renderAdatSection() {
       const personilContainer = document.getElementById('adat-personil-container');
+      if(rancagePricesUnavailable){personilContainer.innerHTML='<p class="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">Harga layanan belum tersedia dari Admin.</p>';document.getElementById('adat-ambu-services-container').innerHTML='';return;}
       personilContainer.innerHTML = DATA_ADAT_PERSONIL.map(item => {
         if (!state.adatPersonil[item.id]) state.adatPersonil[item.id] = { qty: isMandatoryAdatPersonil(item) ? 1 : 0, tier: 'mahir' };
         const current = state.adatPersonil[item.id];
@@ -1180,6 +1176,7 @@
     // RENDER TAB 4: KURSUS SENI
     function renderKursusSection() {
       const container = document.getElementById('kursus-container');
+      if(rancagePricesUnavailable){container.innerHTML='<p class="col-span-full rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">Harga kursus belum tersedia dari Admin.</p>';return;}
       container.innerHTML = DATA_KURSUS.map(item => {
         const qty = state.kursus[item.id] || 0;
         return `
@@ -1215,6 +1212,7 @@
     // RENDER TAB 5: SEWA KOSTUM
     function renderKostumSection() {
       const container = document.getElementById('kostum-container');
+      if(rancagePricesUnavailable){container.innerHTML='<p class="col-span-full rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800">Harga sewa belum tersedia dari Admin.</p>';return;}
       container.innerHTML = DATA_KOSTUM.map(item => {
         const qty = state.kostum[item.id] || 0;
         return `
@@ -1254,6 +1252,7 @@
 
     // 4. KALKULATOR ESTIMASI & KERANJANG
     function updateCalculator() {
+      if(rancagePricesUnavailable){const summary=document.getElementById('cart-items');if(summary)summary.innerHTML='<p class="text-xs text-amber-700">Kalkulator dinonaktifkan sampai harga Admin berhasil dimuat.</p>';return;}
       const cartItems = [];
       let hasDangdut = false;
       let hasAdat = false;
@@ -1568,7 +1567,7 @@
 
 // RANCAGÉ: akun personil, harga dasar, harga pribadi, dan pembagian Jatah Pimpro
 let rancageCurrentUser=null, rancageCurrentProfile=null, rancageBasePriceConfig=null;
-let rancageActivePriceConfig=null, rancagePriceOverrides={}, rancageOperationalFees={};
+let rancageActivePriceConfig=null, rancagePriceOverrides={}, rancageOperationalFees={}, rancagePricesUnavailable=false;
 let rancageCustomerPersonilId=null, rancageOfficialTapCount=0, rancageOfficialTapTimer=null;
 
 function rancageClone(v){return JSON.parse(JSON.stringify(v));}
@@ -1638,32 +1637,33 @@ function rancageApply(cfg){
  rancageActivePriceConfig=rancageClone(cfg);rancageOperationalFees=rancageClone(cfg.fees||{});
 }
 async function rancageLoadPriceContext(){
+ rancagePricesUnavailable=false;
  try{
   const r=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").maybeSingle();if(r.error)throw r.error;
-  const remote=r.data&&r.data.config?r.data.config:{},defaults=rancageBuildDefault(remote);
-  rancageBasePriceConfig=remote.customer_price_config?rancageMerge(defaults,remote.customer_price_config):defaults;
-  if(!remote.customer_price_config||!remote.customer_price_config.adat||!Array.isArray(remote.customer_price_config.adat.rows)){
-   rancageBasePriceConfig.adat.rows=DATA_ADAT_PERSONIL.map(i=>{const x=rancageBasePriceConfig.adat.personil[i.id]||{};const tiers=i.hasTier?rancageClone(x.tiers||i.tiers):null;return {id:i.id,name:i.name,desc:i.desc||'',qty:Number(i.max)||1,price:i.hasTier?Number(tiers&&tiers.mahir&&tiers.mahir.price)||0:Number(x.price!=null?x.price:i.price)||0,hasTier:!!i.hasTier,tiers:tiers};});
+  const remote=r.data&&r.data.config?r.data.config:{};
+  if(!remote.customer_price_config){
+   if(!rancageCurrentProfile||rancageCurrentProfile.role!=="admin")throw new Error("Konfigurasi harga Admin belum tersedia.");
+   rancageBasePriceConfig=rancageBuildDefault(remote);
+  }else{
+   rancageBasePriceConfig=rancageMerge(rancageBuildDefault(remote),remote.customer_price_config);
   }
-  // Tambahkan MC Wedding oleh Ambu sebagai baris terpisah, tepat setelah MC Wedding lama.
-  if(!rancageBasePriceConfig.adat.ambu)rancageBasePriceConfig.adat.ambu={};
-  if(!Array.isArray(rancageBasePriceConfig.adat.ambu.rows))rancageBasePriceConfig.adat.ambu.rows=[];
-  const ambuRows=rancageBasePriceConfig.adat.ambu.rows;
-  if(!ambuRows.some(x=>x.id==="mc_wedding_ambu"||/mc wedding oleh ambu/i.test(String(x.name||"")))){
-   const oldMcIndex=ambuRows.findIndex(x=>x.id==="mc_wedding"||/mc wedding/i.test(String(x.name||"")));
-   ambuRows.splice(oldMcIndex>=0?oldMcIndex+1:ambuRows.length,0,{id:"mc_wedding_ambu",name:"MC Wedding oleh Ambu",desc:"",qty:1,price:300000});
+  // Baris baru hanya disiapkan di editor Admin. Pelanggan baru melihatnya setelah disimpan.
+  if(rancageCurrentProfile&&rancageCurrentProfile.role==="admin"){
+   if(!rancageBasePriceConfig.adat.ambu)rancageBasePriceConfig.adat.ambu={};
+   if(!Array.isArray(rancageBasePriceConfig.adat.ambu.rows))rancageBasePriceConfig.adat.ambu.rows=[];
+   const ambuRows=rancageBasePriceConfig.adat.ambu.rows;
+   if(!ambuRows.some(x=>x.id==="mc_wedding_ambu"||/mc wedding oleh ambu/i.test(String(x.name||"")))){
+    const oldMcIndex=ambuRows.findIndex(x=>x.id==="mc_wedding"||/mc wedding/i.test(String(x.name||"")));
+    ambuRows.splice(oldMcIndex>=0?oldMcIndex+1:ambuRows.length,0,{id:"mc_wedding_ambu",name:"MC Wedding oleh Ambu",desc:"",qty:1,price:300000});
+   }
   }
-  let target=new URLSearchParams(window.location.search).get("personil");
-  if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved)target=rancageCurrentUser.id;
-  rancageCustomerPersonilId=target||null;rancagePriceOverrides={};
-  if(target){const p=await rancageSupabase.from("rancage_personil_prices").select("overrides").eq("user_id",target).maybeSingle();if(p.error)throw p.error;rancagePriceOverrides=p.data&&p.data.overrides?p.data.overrides:{};}
-  if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved){
-   const own=await rancageSupabase.from("rancage_personil_prices").upsert({user_id:rancageCurrentUser.id,overrides:rancagePriceOverrides||{}},{onConflict:"user_id",ignoreDuplicates:true});if(own.error)throw own.error;
-  }
-  const effectiveConfig=rancageMerge(rancageBasePriceConfig,rancagePriceOverrides);
-  rancageOrderAdatRows(effectiveConfig);
-  rancageApply(effectiveConfig);
- }catch(e){console.error("Muat harga RANCAGÉ:",e);if(!rancageBasePriceConfig)rancageBasePriceConfig=rancageBuildDefault({});rancageApply(rancageBasePriceConfig);showToast("Harga online belum termuat; harga dasar sementara ditampilkan.");}
+  rancageCustomerPersonilId=null;rancagePriceOverrides={};
+  rancageOrderAdatRows(rancageBasePriceConfig);
+  rancageApply(rancageBasePriceConfig);
+ }catch(e){
+  console.error("Muat harga RANCAGÉ:",e);rancagePricesUnavailable=true;
+  showToast("Harga belum dapat dimuat dari Admin. Pemilihan layanan sementara dinonaktifkan.");
+ }
 }
 function rancageFee(base,fee){if(!fee)return 0;const v=Math.max(0,Number(fee.value)||0);return fee.type==="percent"?Math.round(base*v/100):v;}
 function rancageOperationalRows(items,hasDangdut,hasAdat){
@@ -1678,66 +1678,66 @@ function rancageOperationalRows(items,hasDangdut,hasAdat){
 function rancagePriceInput(label,path,value){return '<label class="block space-y-1"><span class="text-xs font-semibold text-gray-700">'+label+'</span><input type="number" min="0" step="1000" data-price-path="'+path+'" value="'+(Number(value)||0)+'" class="w-full rounded-xl border border-purple-200 bg-white p-2.5 text-sm font-bold text-[#4A154B]"></label>';}
 function rancageFeeInput(label,path,fee){const v=fee||{type:"nominal",value:0};return '<div class="rounded-xl border border-[#D4AF37]/50 bg-white p-3 space-y-2"><div class="text-xs font-bold text-[#4A154B]">'+label+'</div><div class="grid grid-cols-2 gap-2"><select data-price-path="'+path+'.type" class="rounded-xl border p-2 text-xs"><option value="nominal" '+(v.type==="nominal"?"selected":"")+'>Nominal (Rp)</option><option value="percent" '+(v.type==="percent"?"selected":"")+'>Persentase (%)</option></select><input type="number" min="0" step="1" data-price-path="'+path+'.value" value="'+(Number(v.value)||0)+'" class="rounded-xl border p-2 text-sm font-bold"></div></div>';}
 function rancageRenderPrices(){
- const admin=rancageCurrentProfile.role==="admin",c=admin?rancageBasePriceConfig:rancageActivePriceConfig,p=[];
+ const admin=rancageCurrentProfile.role==="admin",c=rancageBasePriceConfig||rancageActivePriceConfig,p=[];
  const money=v=>formatRupiah(Number(v)||0);
- const table=(title,desc,heads,rows)=>'<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div><h3 class="font-extrabold text-[#4A154B]">'+title+'</h3><p class="text-[11px] text-gray-500">'+desc+'</p></div><div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[620px] text-xs text-left"><thead class="bg-[#4A154B] text-white"><tr>'+heads.map(h=>'<th class="p-2">'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div></section>';
- const row=(cells)=>'<tr class="border-t align-top">'+cells.map((v,i)=>'<td class="p-2 '+(i===cells.length-1?'text-right':'')+'">'+v+'</td>').join('')+'</tr>';
- const priceInput=(label,path,value)=>'<label class="block min-w-[120px]"><span class="sr-only">'+label+'</span><input aria-label="'+label+'" type="number" min="0" step="1000" data-price-path="'+path+'" value="'+(Number(value)||0)+'" class="w-32 rounded-lg border border-purple-200 bg-white p-2 text-right font-bold text-[#4A154B]"></label>';
- p.push('<div class="rounded-xl border border-[#D4AF37] bg-[#fffaf0] p-3 text-xs text-gray-700"><b class="text-[#4A154B]">Pengaturan rincian harga</b><p class="mt-1">'+(admin?'Harga dasar Admin Utama menjadi acuan bersama seluruh personil.':'Perubahan harga ini berlaku pada link pelanggan pribadi Anda. Harga dasar Admin Utama tetap menjadi acuan awal.')+'</p><p class="mt-1">Setiap harga satuan dapat diubah lalu disimpan. Subtotal pesanan dihitung dari jumlah personil/barang yang dipilih pelanggan.</p></div>');
+ const table=(title,desc,heads,rows)=>'<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-1.5"><div><h3 class="font-extrabold text-[#4A154B]">'+title+'</h3><p class="text-[11px] text-gray-500">'+desc+'</p></div><div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[620px] text-xs text-left"><thead class="bg-[#4A154B] text-white"><tr>'+heads.map(h=>'<th class="px-2 py-1">'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div></section>';
+ const row=(cells)=>'<tr class="border-t align-top">'+cells.map((v,i)=>'<td class="px-2 py-1 '+(i===cells.length-1?'text-right':'')+'">'+v+'</td>').join('')+'</tr>';
+ const priceInput=(label,path,value)=>'<label class="block min-w-[120px]"><span class="sr-only">'+label+'</span><input aria-label="'+label+'" type="number" min="0" step="1000" data-price-path="'+path+'" value="'+(Number(value)||0)+'" class="w-32 rounded-lg border border-purple-200 bg-white px-2 py-1 text-right font-bold text-[#4A154B]"></label>';
+ p.push('<div class="rounded-xl border border-[#D4AF37] bg-[#fffaf0] p-3 text-xs text-gray-700"><b class="text-[#4A154B]">Pengaturan rincian harga</b><p class="mt-1">'+'Seluruh perubahan disimpan pada satu konfigurasi harga bersama dan langsung menjadi acuan semua pelanggan.'+'</p><p class="mt-1">Setiap harga satuan dapat diubah lalu disimpan. Subtotal pesanan dihitung dari jumlah personil/barang yang dipilih pelanggan.</p></div>');
  let rows=[];
  DATA_DANGDUT_PACKAGES.forEach((pkg,idx)=>{
   const rosterPath="dangdut.packageRoster."+pkg.id,pack=c.dangdut.personilPackages&&c.dangdut.personilPackages[pkg.id]||{rows:[]},personRows=Array.isArray(pack.rows)?pack.rows:[];
-  const packageName='<input type="text" data-price-path="'+rosterPath+'.name" value="'+rancageEscapeHtml(pkg.name)+'" aria-label="Nama paket" class="w-52 rounded-lg border border-purple-200 p-2 font-bold">';
-  const packageDesc='<input type="text" data-price-path="'+rosterPath+'.desc" value="'+rancageEscapeHtml(pkg.desc)+'" aria-label="Keterangan paket" class="mt-1 w-52 rounded-lg border border-purple-200 p-2 text-[10px]">';
-  const countInput='<input type="number" min="1" max="30" value="'+personRows.length+'" aria-label="Jumlah jenis personil" onchange="rancageResizeDangdutRows(\''+pkg.id+'\',this.value)" class="w-16 rounded-lg border border-purple-200 p-2 text-center font-bold">';
+  const packageName='<input type="text" data-price-path="'+rosterPath+'.name" value="'+rancageEscapeHtml(pkg.name)+'" aria-label="Nama paket" class="w-52 rounded-lg border border-purple-200 px-2 py-1 font-bold">';
+  const packageDesc='<input type="text" data-price-path="'+rosterPath+'.desc" value="'+rancageEscapeHtml(pkg.desc)+'" aria-label="Keterangan paket" class="mt-1 w-52 rounded-lg border border-purple-200 px-2 py-1 text-[10px]">';
+  const countInput='<input type="number" min="1" max="30" value="'+personRows.length+'" aria-label="Jumlah jenis personil" onchange="rancageResizeDangdutRows(\''+pkg.id+'\',this.value)" class="w-16 rounded-lg border border-purple-200 px-2 py-1 text-center font-bold">';
   const subtotal=personRows.reduce((n,x)=>n+(Number(x.qty)||0)*(Number(x.harga)||0),0);
   rows.push(row(['<b>'+(idx+1)+'</b>',packageName+packageDesc,countInput,'<b>Harga paket (otomatis)</b>','<b data-dangdut-package-total="'+pkg.id+'">'+money(subtotal)+'</b>']));
   personRows.forEach((item,j)=>{
    const base="dangdut.personilPackages."+pkg.id+".rows."+j;
-   rows.push(row([idx+1+'.'+(j+1),'<input type="text" data-price-path="'+base+'.jenis" value="'+rancageEscapeHtml(item.jenis||'')+'" aria-label="Jenis personil" class="w-52 rounded-lg border border-purple-200 p-2 font-semibold">','<input type="number" min="1" max="100" data-dangdut-qty data-price-path="'+base+'.qty" value="'+(Number(item.qty)||1)+'" oninput="rancageUpdateDangdutTotals(\''+pkg.id+'\')" class="w-20 rounded-lg border border-purple-200 p-2 text-center font-bold">','<input type="number" min="0" step="1000" data-dangdut-price data-price-path="'+base+'.harga" value="'+(Number(item.harga)||0)+'" oninput="rancageUpdateDangdutTotals(\''+pkg.id+'\')" class="w-32 rounded-lg border border-purple-200 p-2 text-right font-bold text-[#4A154B]">','<b data-dangdut-row-total="'+pkg.id+'-'+j+'">'+money((Number(item.qty)||0)*(Number(item.harga)||0))+'</b>']));
+   rows.push(row([idx+1+'.'+(j+1),'<input type="text" data-price-path="'+base+'.jenis" value="'+rancageEscapeHtml(item.jenis||'')+'" aria-label="Jenis personil" class="w-52 rounded-lg border border-purple-200 px-2 py-1 font-semibold">','<input type="number" min="1" max="100" data-dangdut-qty data-price-path="'+base+'.qty" value="'+(Number(item.qty)||1)+'" oninput="rancageUpdateDangdutTotals(\''+pkg.id+'\')" class="w-20 rounded-lg border border-purple-200 px-2 py-1 text-center font-bold">','<input type="number" min="0" step="1000" data-dangdut-price data-price-path="'+base+'.harga" value="'+(Number(item.harga)||0)+'" oninput="rancageUpdateDangdutTotals(\''+pkg.id+'\')" class="w-32 rounded-lg border border-purple-200 px-2 py-1 text-right font-bold text-[#4A154B]">','<b data-dangdut-row-total="'+pkg.id+'-'+j+'">'+money((Number(item.qty)||0)*(Number(item.harga)||0))+'</b>']));
   });
  });
  p.push(table('1. HIBURAN DANGDUT','Rincian formasi personil setiap paket. Setiap jenis pemain memiliki harga satuan masing-masing.',['No.','Paket / rincian personil','Jumlah','Jenis harga','Harga (Rp)'],rows));
  rows=[];
  const adatRows=Array.isArray(c.adat.rows)?c.adat.rows.slice():DATA_ADAT_PERSONIL.map(i=>({id:i.id,name:i.name,desc:i.desc||'',qty:i.max,price:i.price||0,hasTier:!!i.hasTier,tiers:i.tiers||null}));
  adatRows.sort((a,b)=>rancageAdatRoleRank(a)-rancageAdatRoleRank(b));
- p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div class="flex items-center justify-between gap-3"><div><h3 class="font-extrabold text-[#4A154B]">2. UPACARA ADAT — PERSONIL</h3><p class="text-[11px] text-gray-500">Ubah jumlah baris untuk menambah atau mengurangi jenis personil. Nama, keterangan, banyak, dan harga satuan dapat diedit. Jumlah biaya dihitung otomatis.</p></div><label class="text-[10px] font-bold text-[#4A154B] text-center">Jumlah baris<input id="rancageAdatRowCount" type="number" min="1" max="30" value="'+adatRows.length+'" onchange="rancageResizeAdatRows(this.value)" class="mt-1 w-16 rounded-lg border border-purple-200 p-2 text-center text-sm font-extrabold"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[760px] text-xs text-left"><thead class="bg-[#4A154B] text-white"><tr><th class="p-2">No.</th><th class="p-2">Jenis personil</th><th class="p-2">Keterangan</th><th class="p-2">Banyak</th><th class="p-2">Tingkat / harga satuan</th><th class="p-2 text-right">Jumlah (otomatis)</th></tr></thead><tbody>');
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-1.5"><div class="flex items-center justify-between gap-3"><div><h3 class="font-extrabold text-[#4A154B]">2. UPACARA ADAT — PERSONIL</h3><p class="text-[11px] text-gray-500">Ubah jumlah baris untuk menambah atau mengurangi jenis personil. Nama, keterangan, banyak, dan harga satuan dapat diedit. Jumlah biaya dihitung otomatis.</p></div><label class="text-[10px] font-bold text-[#4A154B] text-center">Jumlah baris<input id="rancageAdatRowCount" type="number" min="1" max="30" value="'+adatRows.length+'" onchange="rancageResizeAdatRows(this.value)" class="mt-1 w-16 rounded-lg border border-purple-200 px-2 py-1 text-center text-sm font-extrabold"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[760px] text-xs text-left"><thead class="bg-[#4A154B] text-white"><tr><th class="px-2 py-1">No.</th><th class="px-2 py-1">Jenis personil</th><th class="px-2 py-1">Keterangan</th><th class="px-2 py-1">Banyak</th><th class="px-2 py-1">Tingkat / harga satuan</th><th class="px-2 py-1 text-right">Jumlah (otomatis)</th></tr></thead><tbody>');
  adatRows.forEach((item,idx)=>{
-  const name='<input type="text" data-price-path="adat.rows.'+idx+'.name" value="'+rancageEscapeHtml(item.name)+'" class="w-44 rounded-lg border border-purple-200 p-2 font-semibold">';
-  const desc='<input type="text" data-price-path="adat.rows.'+idx+'.desc" value="'+rancageEscapeHtml(item.desc||'')+'" class="w-48 rounded-lg border border-purple-200 p-2">';
-  const qty='<input type="number" min="1" max="100" data-adat-qty data-price-path="adat.rows.'+idx+'.qty" value="'+(Number(item.qty)||1)+'" oninput="rancageUpdateAdatTotals()" class="w-20 rounded-lg border border-purple-200 p-2 text-center font-bold">';
-  const adatPriceInput=(label,path,value)=>'<input aria-label="'+rancageEscapeHtml(label)+'" type="number" min="0" step="1000" data-adat-price data-price-path="'+path+'" value="'+(Number(value)||0)+'" oninput="rancageUpdateAdatTotals()" class="w-32 rounded-lg border border-purple-200 p-2 text-right font-bold text-[#4A154B]">';
+  const name='<input type="text" data-price-path="adat.rows.'+idx+'.name" value="'+rancageEscapeHtml(item.name)+'" class="w-44 rounded-lg border border-purple-200 px-2 py-1 font-semibold">';
+  const desc='<input type="text" data-price-path="adat.rows.'+idx+'.desc" value="'+rancageEscapeHtml(item.desc||'')+'" class="w-48 rounded-lg border border-purple-200 px-2 py-1">';
+  const qty='<input type="number" min="1" max="100" data-adat-qty data-price-path="adat.rows.'+idx+'.qty" value="'+(Number(item.qty)||1)+'" oninput="rancageUpdateAdatTotals()" class="w-20 rounded-lg border border-purple-200 px-2 py-1 text-center font-bold">';
+  const adatPriceInput=(label,path,value)=>'<input aria-label="'+rancageEscapeHtml(label)+'" type="number" min="0" step="1000" data-adat-price data-price-path="'+path+'" value="'+(Number(value)||0)+'" oninput="rancageUpdateAdatTotals()" class="w-32 rounded-lg border border-purple-200 px-2 py-1 text-right font-bold text-[#4A154B]">';
   if(item.hasTier&&item.tiers){
-   Object.keys(item.tiers).forEach((tier,j)=>{const t=item.tiers[tier],price=adatPriceInput(item.name+' '+t.label,'adat.rows.'+idx+'.tiers.'+tier+'.price',t.price);rows.push('<tr data-adat-calc-row class="border-t align-top"><td class="p-2">'+(j===0?idx+1:'')+'</td><td class="p-2">'+(j===0?name:'')+'</td><td class="p-2">'+(j===0?desc:'')+'</td><td class="p-2">'+qty+'</td><td class="p-2"><div class="mb-1 text-[10px] text-gray-500">'+rancageEscapeHtml(t.label)+'</div>'+price+'</td><td data-adat-total class="p-2 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(t.price)||0))+'</td></tr>');});
+   Object.keys(item.tiers).forEach((tier,j)=>{const t=item.tiers[tier],price=adatPriceInput(item.name+' '+t.label,'adat.rows.'+idx+'.tiers.'+tier+'.price',t.price);rows.push('<tr data-adat-calc-row class="border-t align-top"><td class="px-2 py-1">'+(j===0?idx+1:'')+'</td><td class="px-2 py-1">'+(j===0?name:'')+'</td><td class="px-2 py-1">'+(j===0?desc:'')+'</td><td class="px-2 py-1">'+qty+'</td><td class="px-2 py-1"><div class="mb-1 text-[10px] text-gray-500">'+rancageEscapeHtml(t.label)+'</div>'+price+'</td><td data-adat-total class="px-2 py-1 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(t.price)||0))+'</td></tr>');});
   }else{
    const price=adatPriceInput(item.name,'adat.rows.'+idx+'.price',item.price);
-   rows.push('<tr data-adat-calc-row class="border-t align-top"><td class="p-2">'+(idx+1)+'</td><td class="p-2">'+name+'</td><td class="p-2">'+desc+'</td><td class="p-2">'+qty+'</td><td class="p-2">'+price+'</td><td data-adat-total class="p-2 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(item.price)||0))+'</td></tr>');
+   rows.push('<tr data-adat-calc-row class="border-t align-top"><td class="px-2 py-1">'+(idx+1)+'</td><td class="px-2 py-1">'+name+'</td><td class="px-2 py-1">'+desc+'</td><td class="px-2 py-1">'+qty+'</td><td class="px-2 py-1">'+price+'</td><td data-adat-total class="px-2 py-1 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(item.price)||0))+'</td></tr>');
   }
  });
  p.push(rows.join('')+'</tbody></table></div></section>');
  rows=[];
  const ambuRows=Array.isArray(c.adat.ambu.rows)?c.adat.ambu.rows:[];
- p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div class="flex items-center justify-between gap-2"><div><h3 class="font-extrabold text-[#4A154B]">3. LAYANAN KHUSUS AMBU</h3><p class="text-[11px] text-gray-500">Nama, keterangan, jumlah, dan harga dapat diubah atau ditambah.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+ambuRows.length+'" onchange="rancageResizeCatalogRows(\'ambu\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Nama layanan</th><th>Catatan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-1.5"><div class="flex items-center justify-between gapx-2 py-1"><div><h3 class="font-extrabold text-[#4A154B]">3. LAYANAN KHUSUS AMBU</h3><p class="text-[11px] text-gray-500">Nama, keterangan, jumlah, dan harga dapat diubah atau ditambah.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+ambuRows.length+'" onchange="rancageResizeCatalogRows(\'ambu\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Nama layanan</th><th>Catatan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
  ambuRows.forEach((x,i)=>p.push('<tr class="border-t"><td>'+(i+1)+'</td><td><input data-price-path="adat.ambu.rows.'+i+'.name" value="'+rancageEscapeHtml(x.name)+'" class="w-full rounded border p-1"></td><td><input data-price-path="adat.ambu.rows.'+i+'.desc" value="'+rancageEscapeHtml(x.desc||'')+'" class="w-full rounded border p-1"></td><td><input type="number" min="1" data-price-path="adat.ambu.rows.'+i+'.qty" value="'+(Number(x.qty)||1)+'" class="w-full rounded border p-1"></td><td>'+priceInput(x.name,'adat.ambu.rows.'+i+'.price',x.price)+'</td></tr>'));
  p.push('</tbody></table></div></section>');
  rows=[];
  const kursusRows=Array.isArray(c.kursus.rows)?c.kursus.rows:[];
- p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div class="flex items-center justify-between gap-2"><div><h3 class="font-extrabold text-[#4A154B]">4. KURSUS SENI</h3><p class="text-[11px] text-gray-500">Ubah nama, kategori, keterangan, satuan, jumlah, dan harga.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+kursusRows.length+'" onchange="rancageResizeCatalogRows(\'kursus\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Nama / kategori</th><th>Catatan</th><th>Satuan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-1.5"><div class="flex items-center justify-between gapx-2 py-1"><div><h3 class="font-extrabold text-[#4A154B]">4. KURSUS SENI</h3><p class="text-[11px] text-gray-500">Ubah nama, kategori, keterangan, satuan, jumlah, dan harga.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+kursusRows.length+'" onchange="rancageResizeCatalogRows(\'kursus\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Nama / kategori</th><th>Catatan</th><th>Satuan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
  kursusRows.forEach((x,i)=>p.push('<tr class="border-t"><td>'+(i+1)+'</td><td><input data-price-path="kursus.rows.'+i+'.title" value="'+rancageEscapeHtml(x.title)+'" class="w-full rounded border p-1"><input data-price-path="kursus.rows.'+i+'.category" value="'+rancageEscapeHtml(x.category||'')+'" class="w-full rounded border p-1 mt-1"></td><td><input data-price-path="kursus.rows.'+i+'.desc" value="'+rancageEscapeHtml(x.desc||'')+'" class="w-full rounded border p-1"></td><td><input data-price-path="kursus.rows.'+i+'.unit" value="'+rancageEscapeHtml(x.unit||'')+'" class="w-full rounded border p-1"></td><td><input type="number" min="1" data-price-path="kursus.rows.'+i+'.qty" value="'+(Number(x.qty)||1)+'" class="w-full rounded border p-1"></td><td>'+priceInput(x.title,'kursus.rows.'+i+'.price',x.price)+'</td></tr>'));
  p.push('</tbody></table></div></section>');
  rows=[];
  const kostumRows=Array.isArray(c.kostum.rows)?c.kostum.rows:[];
- p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div class="flex items-center justify-between gap-2"><div><h3 class="font-extrabold text-[#4A154B]">5. SEWA KOSTUM</h3><p class="text-[11px] text-gray-500">Ubah nama, keterangan, jumlah, dan harga sewa.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+kostumRows.length+'" onchange="rancageResizeCatalogRows(\'kostum\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Jenis kostum</th><th>Keterangan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-1.5"><div class="flex items-center justify-between gapx-2 py-1"><div><h3 class="font-extrabold text-[#4A154B]">5. SEWA KOSTUM</h3><p class="text-[11px] text-gray-500">Ubah nama, keterangan, jumlah, dan harga sewa.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+kostumRows.length+'" onchange="rancageResizeCatalogRows(\'kostum\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Jenis kostum</th><th>Keterangan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
  kostumRows.forEach((x,i)=>p.push('<tr class="border-t"><td>'+(i+1)+'</td><td><input data-price-path="kostum.rows.'+i+'.name" value="'+rancageEscapeHtml(x.name)+'" class="w-full rounded border p-1"></td><td><input data-price-path="kostum.rows.'+i+'.include" value="'+rancageEscapeHtml(x.include||'')+'" class="w-full rounded border p-1"></td><td><input type="number" min="1" data-price-path="kostum.rows.'+i+'.qty" value="'+(Number(x.qty)||1)+'" class="w-full rounded border p-1"></td><td>'+priceInput(x.name,'kostum.rows.'+i+'.price',x.price)+'</td></tr>'));
  p.push('</tbody></table></div></section>');
- p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-3"><h3 class="font-extrabold text-[#4A154B]">6. BIAYA LAYANAN DAN OPERASIONAL — JATAH PIMPRO</h3><p class="text-[11px] text-gray-500">Biaya operasional menggunakan satu komponen Jatah Pimpro. Tidak ada pemisahan biaya jasa dan transportasi.</p>');
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-3"><h3 class="font-extrabold text-[#4A154B]">6. BIAYA LAYANAN DAN OPERASIONAL — JATAH PIMPRO</h3><p class="text-[11px] text-gray-500">Biaya operasional menggunakan satu komponen Jatah Pimpro. Tidak ada pemisahan biaya jasa dan transportasi.</p>');
  const names={orgen:'Orgen Tunggal',semi:'Dangdut Semi',full:'Dangdut Full',akustik:'Paket Lainnya / Akustik'};
- p.push('<div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[560px] text-xs"><thead class="bg-[#4A154B] text-white"><tr><th class="p-2 text-left">Layanan</th><th class="p-2 text-left">Metode</th><th class="p-2 text-right">Nilai</th></tr></thead><tbody>');
- Object.keys(names).forEach(id=>p.push('<tr class="border-t"><td class="p-2">Dangdut — '+names[id]+'</td><td class="p-2">'+rancageFeeInput('Metode Jatah Pimpro Dangdut '+names[id],'fees.dangdut.'+id,c.fees.dangdut[id])+'</td><td class="p-2 text-right">'+(c.fees.dangdut[id].type==='percent'?'Persentase':'Nominal')+'</td></tr>'));
- [['Upacara Adat','fees.adat',c.fees.adat],['Paket Gabungan Dangdut + Adat','fees.gabungan',c.fees.gabungan],['Kursus Seni','fees.kursus',c.fees.kursus],['Sewa Kostum','fees.kostum',c.fees.kostum]].forEach(x=>p.push('<tr class="border-t"><td class="p-2">'+x[0]+'</td><td class="p-2">'+rancageFeeInput(x[0],' '+x[1],x[2]).replace('data-price-path=" ','data-price-path="')+'</td><td class="p-2 text-right">'+(x[2].type==='percent'?'Persentase':'Nominal')+'</td></tr>'));
+ p.push('<div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[560px] text-xs"><thead class="bg-[#4A154B] text-white"><tr><th class="px-2 py-1 text-left">Layanan</th><th class="px-2 py-1 text-left">Metode</th><th class="px-2 py-1 text-right">Nilai</th></tr></thead><tbody>');
+ Object.keys(names).forEach(id=>p.push('<tr class="border-t"><td class="px-2 py-1">Dangdut — '+names[id]+'</td><td class="px-2 py-1">'+rancageFeeInput('Metode Jatah Pimpro Dangdut '+names[id],'fees.dangdut.'+id,c.fees.dangdut[id])+'</td><td class="px-2 py-1 text-right">'+(c.fees.dangdut[id].type==='percent'?'Persentase':'Nominal')+'</td></tr>'));
+ [['Upacara Adat','fees.adat',c.fees.adat],['Paket Gabungan Dangdut + Adat','fees.gabungan',c.fees.gabungan],['Kursus Seni','fees.kursus',c.fees.kursus],['Sewa Kostum','fees.kostum',c.fees.kostum]].forEach(x=>p.push('<tr class="border-t"><td class="px-2 py-1">'+x[0]+'</td><td class="px-2 py-1">'+rancageFeeInput(x[0],' '+x[1],x[2]).replace('data-price-path=" ','data-price-path="')+'</td><td class="px-2 py-1 text-right">'+(x[2].type==='percent'?'Persentase':'Nominal')+'</td></tr>'));
  p.push('</tbody></table></div></section>');
- p.push('<div class="flex flex-wrap gap-2"><button type="button" onclick="rancageSavePrices()" class="flex-1 min-w-[150px] rounded-xl bg-[#4A154B] text-white p-3 text-sm font-extrabold">Simpan Semua Rincian Harga</button>');
- if(!admin)p.push('<button type="button" onclick="rancageAskReset()" class="flex-1 min-w-[150px] rounded-xl border-2 border-[#D4AF37] bg-white text-[#4A154B] p-3 text-sm font-extrabold">↩ Kembali ke Harga Dasar</button>');
+ p.push('<div class="flex flex-wrap gapx-2 py-1"><button type="button" onclick="rancageSavePrices()" class="flex-1 min-w-[150px] rounded-xl bg-[#4A154B] text-white p-3 text-sm font-extrabold">Simpan Semua Rincian Harga</button>');
+ 
  p.push('</div><p class="text-[10px] text-gray-500">Tabel dapat digeser ke samping pada layar HP. Perubahan disimpan ke konfigurasi harga Supabase yang sudah digunakan aplikasi.</p>');
  const root=document.getElementById("rancagePanelContent");
  root.innerHTML=p.join("");
@@ -1745,7 +1745,7 @@ function rancageRenderPrices(){
  const accessNames=["Hiburan Dangdut","Upacara Adat — Personil","Layanan Khusus Ambu","Kursus Seni","Sewa Kostum","Jatah Pimpro"];
  const accessIcons=["🎤","🎎","🌿","🎨","👘","💰"];
  const access=document.createElement("div");
- access.className="grid grid-cols-3 gap-1.5 rounded-xl border border-[#D4AF37]/60 bg-[#fffaf0] p-2";access.dataset.priceAccessMenu="1";
+ access.className="grid grid-cols-3 gapx-2 py-1 rounded-xl border border-[#D4AF37]/60 bg-[#fffaf0] px-2 py-1";access.dataset.priceAccessMenu="1";
  access.innerHTML='<div class="col-span-2 sm:col-span-3 mb-1"><b class="text-sm text-[#4A154B]">Akses Tabel Pengaturan Harga</b><p class="text-[10px] text-gray-500">Ketuk salah satu tombol untuk membuka tabel yang diperlukan.</p></div>'+accessNames.map((name,i)=>'<button type="button" data-price-access="'+i+'" onclick="rancageTogglePriceSection('+i+')" class="rounded-lg border border-[#D4AF37] bg-white px-1 py-2 text-[10px] font-bold text-[#4A154B]">'+name.replace(" — "," ")+'</button>').join("")+'<button type="button" onclick="rancageShareCustomerLink()" class="col-span-3 rounded-lg bg-[#128C4A] px-2 py-2 text-[11px] font-bold text-white">Bagikan ke WhatsApp</button>';
  const info=root.firstElementChild;
  if(info)info.insertAdjacentElement("afterend",access);else root.prepend(access);
@@ -1784,7 +1784,7 @@ function rancageResizeCatalogRows(kind,value){
  }
  rows.splice(count);
  if(kind==="ambu")c.adat.ambu.rows=rows;else if(kind==="kursus")c.kursus.rows=rows;else c.kostum.rows=rows;
- if(rancageCurrentProfile.role==="admin")rancageBasePriceConfig=rancageClone(c);else rancageActivePriceConfig=rancageClone(c);
+ rancageBasePriceConfig=rancageClone(c);rancageActivePriceConfig=rancageClone(c);
  rancageApply(c);rancageRenderPrices();
 }
 function rancageResizeDangdutRows(pkgId,value){
@@ -1817,22 +1817,16 @@ function rancageResizeAdatRows(value){
  if(rancageCurrentProfile.role==="admin")rancageBasePriceConfig=rancageClone(c);else rancageActivePriceConfig=rancageClone(c);
  rancageApply(c);rancageRenderPrices();
 }
-function rancageReadPriceForm(){const c=rancageClone(rancageCurrentProfile.role==="admin"?rancageBasePriceConfig:rancageActivePriceConfig);document.querySelectorAll("#rancagePanelContent [data-price-path]").forEach(i=>rancageSetPath(c,i.getAttribute("data-price-path"),i.type==="number"?Math.max(0,Number(i.value)||0):i.value));return c;}
+function rancageReadPriceForm(){const c=rancageClone(rancageBasePriceConfig||rancageActivePriceConfig);document.querySelectorAll("#rancagePanelContent [data-price-path]").forEach(i=>rancageSetPath(c,i.getAttribute("data-price-path"),i.type==="number"?Math.max(0,Number(i.value)||0):i.value));return c;}
 async function rancageSavePrices(){
  const next=rancageReadPriceForm();
  try{
-  if(rancageCurrentProfile.role==="admin"){
-   const current=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").single();if(current.error)throw current.error;
-   const conf=Object.assign({},current.data.config||{});conf.customer_price_config=next;
-   const saved=await rancageSupabase.from("rancage_app_config").update({config:conf,updated_by:rancageCurrentUser.id}).eq("id","main");if(saved.error)throw saved.error;
-   rancageBasePriceConfig=rancageClone(next);
-  }else{
-   const diff=rancageDiff(rancageBasePriceConfig,next);
-   const saved=await rancageSupabase.from("rancage_personil_prices").upsert({user_id:rancageCurrentUser.id,overrides:diff},{onConflict:"user_id"});if(saved.error)throw saved.error;
-   rancagePriceOverrides=diff;
-  }
-  const effective=rancageCurrentProfile.role==="admin"?rancageMerge(rancageBasePriceConfig,rancagePriceOverrides):next;rancageApply(effective);renderDangdutPackages();renderDangdutRoster();renderAdatSection();renderKursusSection();renderKostumSection();updateCalculator();rancageRenderPrices();showToast("Harga berhasil disimpan.");
- }catch(e){console.error(e);showToast("Harga belum tersimpan: "+(e.message||"periksa koneksi"));}
+  const current=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").single();if(current.error)throw current.error;
+  const conf=Object.assign({},current.data.config||{});conf.customer_price_config=next;
+  const saved=await rancageSupabase.from("rancage_app_config").update({config:conf,updated_by:rancageCurrentUser.id}).eq("id","main");if(saved.error)throw saved.error;
+  rancageBasePriceConfig=rancageClone(next);rancageActivePriceConfig=rancageClone(next);rancagePriceOverrides={};rancagePricesUnavailable=false;
+  rancageApply(next);renderDangdutPackages();renderDangdutRoster();renderAdatSection();renderKursusSection();renderKostumSection();updateCalculator();rancageRenderPrices();showToast("Harga bersama berhasil disimpan dan menjadi acuan semua pelanggan.");
+ }catch(e){console.error(e);showToast("Harga belum tersimpan: "+(e.message||"periksa izin akses Supabase"));}
 }
 function rancageAskReset(){const b=document.getElementById("rancageConfirmReset");b.classList.remove("hidden");b.classList.add("flex");}
 function rancageCancelReset(){const b=document.getElementById("rancageConfirmReset");b.classList.add("hidden");b.classList.remove("flex");}
