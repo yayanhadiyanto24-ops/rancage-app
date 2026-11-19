@@ -1542,8 +1542,11 @@ function rancageBuildDefault(remote){
  const personil={},ambu={},kursus={},kostum={};
  DATA_ADAT_PERSONIL.forEach(i=>personil[i.id]=i.hasTier?{tiers:rancageClone(i.tiers)}:{price:Number(i.price)||0});
  DATA_AMBU_SERVICES.forEach(i=>ambu[i.id]={price:Number(i.price)||0});
+ ambu.rows=DATA_AMBU_SERVICES.map(i=>({id:i.id,name:i.name,desc:i.desc,qty:1,price:Number(i.price)||0}));
  DATA_KURSUS.forEach(i=>kursus[i.id]={price:Number(i.price)||0});
+ kursus.rows=DATA_KURSUS.map(i=>({id:i.id,title:i.title,category:i.category,desc:i.desc,unit:i.unit,qty:1,price:Number(i.price)||0}));
  DATA_KOSTUM.forEach(i=>kostum[i.id]={price:Number(i.price)||0});
+ kostum.rows=DATA_KOSTUM.map(i=>({id:i.id,name:i.name,include:i.include,badge:i.badge,icon:i.icon,qty:1,price:Number(i.price)||0}));
  const packagePrices={},packageRoster={},personilPackages={
   orgen:{rows:[{jenis:"Penyanyi",qty:2,harga:400000},{jenis:"Pemain Keyboard",qty:1,harga:700000},{jenis:"MC / Pembawa Acara",qty:1,harga:500000}]},
   semi:{rows:[{jenis:"Penyanyi",qty:3,harga:400000},{jenis:"Pemain Keyboard",qty:1,harga:700000},{jenis:"Pemain Gendang",qty:1,harga:600000},{jenis:"Pemain Gitar / Suling",qty:1,harga:500000}]},
@@ -1566,9 +1569,12 @@ function rancageApply(cfg){
  DATA_DANGDUT_PACKAGES.forEach(i=>{const x=cfg.dangdut.packagePrices&&cfg.dangdut.packagePrices[i.id];if(x&&x.price!=null)i.defaultPrice=Math.max(0,Number(x.price)||0);const r=cfg.dangdut.packageRoster&&cfg.dangdut.packageRoster[i.id];if(r){if(r.name!=null)i.name=String(r.name);if(r.desc!=null)i.desc=String(r.desc);const roster=Array.isArray(r.roster)?r.roster.map(v=>String(v||"").trim()):i.roster;i.roster=roster;i.personilCount=Math.max(1,Number(r.personilCount)||roster.length||1);while(i.roster.length<i.personilCount)i.roster.push("Personil "+(i.roster.length+1));i.roster=i.roster.slice(0,i.personilCount);}else{i.personilCount=i.roster.length;}});
  if(cfg.dangdut&&cfg.dangdut.personilPackages){DATA_DANGDUT_PACKAGES.forEach(i=>{const pack=cfg.dangdut.personilPackages[i.id];if(pack&&Array.isArray(pack.rows)){const total=pack.rows.reduce((n,r)=>n+Math.max(0,Number(r.qty)||0)*Math.max(0,Number(r.harga)||0),0);i.defaultPrice=total;if(cfg.dangdut.packagePrices&&cfg.dangdut.packagePrices[i.id])cfg.dangdut.packagePrices[i.id].price=total;}});}
  if(!Array.isArray(cfg.adat.rows))DATA_ADAT_PERSONIL.forEach(i=>{const x=cfg.adat.personil[i.id];if(!x)return;if(i.hasTier&&x.tiers)Object.keys(i.tiers).forEach(t=>{if(x.tiers[t])i.tiers[t].price=Math.max(0,Number(x.tiers[t].price)||0);});else if(x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
- DATA_AMBU_SERVICES.forEach(i=>{const x=cfg.adat.ambu[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
- DATA_KURSUS.forEach(i=>{const x=cfg.kursus[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
- DATA_KOSTUM.forEach(i=>{const x=cfg.kostum[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
+ if(cfg.adat.ambu&&Array.isArray(cfg.adat.ambu.rows)){DATA_AMBU_SERVICES.splice(0,DATA_AMBU_SERVICES.length,...cfg.adat.ambu.rows.map((r,i)=>({id:r.id||('ambu_'+i),name:r.name||('Layanan '+(i+1)),desc:r.desc||'',price:Math.max(0,Number(r.price)||0)})));}
+ DATA_AMBU_SERVICES.forEach(i=>{const x=cfg.adat.ambu[i.id];if(x)i.price=Math.max(0,Number(x.price)||i.price||0);});
+ if(cfg.kursus&&Array.isArray(cfg.kursus.rows)){DATA_KURSUS.splice(0,DATA_KURSUS.length,...cfg.kursus.rows.map((r,i)=>({id:r.id||('kursus_'+i),title:r.title||('Kursus '+(i+1)),category:r.category||'',desc:r.desc||'',unit:r.unit||'paket',price:Math.max(0,Number(r.price)||0)})));}
+ DATA_KURSUS.forEach(i=>{const x=cfg.kursus[i.id];if(x&&x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
+ if(cfg.kostum&&Array.isArray(cfg.kostum.rows)){DATA_KOSTUM.splice(0,DATA_KOSTUM.length,...cfg.kostum.rows.map((r,i)=>({id:r.id||('kostum_'+i),name:r.name||('Kostum '+(i+1)),include:r.include||'',badge:r.badge||'Pilihan',icon:r.icon||'fa-shirt',price:Math.max(0,Number(r.price)||0)})));}
+ DATA_KOSTUM.forEach(i=>{const x=cfg.kostum[i.id];if(x&&x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
  rancageActivePriceConfig=rancageClone(cfg);rancageOperationalFees=rancageClone(cfg.fees||{});
 }
 async function rancageLoadPriceContext(){
@@ -1640,14 +1646,20 @@ function rancageRenderPrices(){
  });
  p.push(rows.join('')+'</tbody></table></div></section>');
  rows=[];
- DATA_AMBU_SERVICES.forEach((item,idx)=>rows.push(row([idx+1,'<b>'+item.name+'</b><div class="text-[10px] text-gray-500">'+item.desc+'</div>','Per layanan','Harga satuan',priceInput(item.name,'adat.ambu.'+item.id+'.price',c.adat.ambu[item.id].price)])));
- p.push(table('3. LAYANAN KHUSUS AMBU','Rincian setiap prosesi/pemanduan yang dapat dipilih pelanggan.',['No.','Nama layanan','Satuan','Jenis harga','Harga (Rp)'],rows));
+ const ambuRows=Array.isArray(c.adat.ambu.rows)?c.adat.ambu.rows:[];
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div class="flex items-center justify-between gap-2"><div><h3 class="font-extrabold text-[#4A154B]">3. LAYANAN KHUSUS AMBU</h3><p class="text-[11px] text-gray-500">Nama, keterangan, jumlah, dan harga dapat diubah atau ditambah.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+ambuRows.length+'" onchange="rancageResizeCatalogRows(\'ambu\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Nama layanan</th><th>Catatan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
+ ambuRows.forEach((x,i)=>p.push('<tr class="border-t"><td>'+(i+1)+'</td><td><input data-price-path="adat.ambu.rows.'+i+'.name" value="'+rancageEscapeHtml(x.name)+'" class="w-full rounded border p-1"></td><td><input data-price-path="adat.ambu.rows.'+i+'.desc" value="'+rancageEscapeHtml(x.desc||'')+'" class="w-full rounded border p-1"></td><td><input type="number" min="1" data-price-path="adat.ambu.rows.'+i+'.qty" value="'+(Number(x.qty)||1)+'" class="w-full rounded border p-1"></td><td>'+priceInput(x.name,'adat.ambu.rows.'+i+'.price',x.price)+'</td></tr>'));
+ p.push('</tbody></table></div></section>');
  rows=[];
- DATA_KURSUS.forEach((item,idx)=>rows.push(row([idx+1,'<b>'+item.title+'</b><div class="text-[10px] text-gray-500">'+item.category+' — '+item.desc+'</div>','Per '+item.unit,'Harga satuan',priceInput(item.title,'kursus.'+item.id+'.price',c.kursus[item.id].price)])));
- p.push(table('4. KURSUS SENI','Harga per pertemuan atau paket bulanan sesuai jenis kursus.',['No.','Jenis kursus','Satuan harga','Jenis harga','Harga (Rp)'],rows));
+ const kursusRows=Array.isArray(c.kursus.rows)?c.kursus.rows:[];
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div class="flex items-center justify-between gap-2"><div><h3 class="font-extrabold text-[#4A154B]">4. KURSUS SENI</h3><p class="text-[11px] text-gray-500">Ubah nama, kategori, keterangan, satuan, jumlah, dan harga.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+kursusRows.length+'" onchange="rancageResizeCatalogRows(\'kursus\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Nama / kategori</th><th>Catatan</th><th>Satuan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
+ kursusRows.forEach((x,i)=>p.push('<tr class="border-t"><td>'+(i+1)+'</td><td><input data-price-path="kursus.rows.'+i+'.title" value="'+rancageEscapeHtml(x.title)+'" class="w-full rounded border p-1"><input data-price-path="kursus.rows.'+i+'.category" value="'+rancageEscapeHtml(x.category||'')+'" class="w-full rounded border p-1 mt-1"></td><td><input data-price-path="kursus.rows.'+i+'.desc" value="'+rancageEscapeHtml(x.desc||'')+'" class="w-full rounded border p-1"></td><td><input data-price-path="kursus.rows.'+i+'.unit" value="'+rancageEscapeHtml(x.unit||'')+'" class="w-full rounded border p-1"></td><td><input type="number" min="1" data-price-path="kursus.rows.'+i+'.qty" value="'+(Number(x.qty)||1)+'" class="w-full rounded border p-1"></td><td>'+priceInput(x.title,'kursus.rows.'+i+'.price',x.price)+'</td></tr>'));
+ p.push('</tbody></table></div></section>');
  rows=[];
- DATA_KOSTUM.forEach((item,idx)=>rows.push(row([idx+1,'<b>'+item.name+'</b><div class="text-[10px] text-gray-500">'+item.include+'</div>','Per set','Harga sewa',priceInput(item.name,'kostum.'+item.id+'.price',c.kostum[item.id].price)])));
- p.push(table('5. SEWA KOSTUM','Rincian jenis kostum dan perlengkapan yang disewakan.',['No.','Jenis kostum / kelengkapan','Satuan','Jenis harga','Harga (Rp)'],rows));
+ const kostumRows=Array.isArray(c.kostum.rows)?c.kostum.rows:[];
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div class="flex items-center justify-between gap-2"><div><h3 class="font-extrabold text-[#4A154B]">5. SEWA KOSTUM</h3><p class="text-[11px] text-gray-500">Ubah nama, keterangan, jumlah, dan harga sewa.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+kostumRows.length+'" onchange="rancageResizeCatalogRows(\'kostum\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Jenis kostum</th><th>Keterangan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
+ kostumRows.forEach((x,i)=>p.push('<tr class="border-t"><td>'+(i+1)+'</td><td><input data-price-path="kostum.rows.'+i+'.name" value="'+rancageEscapeHtml(x.name)+'" class="w-full rounded border p-1"></td><td><input data-price-path="kostum.rows.'+i+'.include" value="'+rancageEscapeHtml(x.include||'')+'" class="w-full rounded border p-1"></td><td><input type="number" min="1" data-price-path="kostum.rows.'+i+'.qty" value="'+(Number(x.qty)||1)+'" class="w-full rounded border p-1"></td><td>'+priceInput(x.name,'kostum.rows.'+i+'.price',x.price)+'</td></tr>'));
+ p.push('</tbody></table></div></section>');
  p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-3"><h3 class="font-extrabold text-[#4A154B]">6. BIAYA LAYANAN DAN OPERASIONAL — JATAH PIMPRO</h3><p class="text-[11px] text-gray-500">Biaya operasional menggunakan satu komponen Jatah Pimpro. Tidak ada pemisahan biaya jasa dan transportasi.</p>');
  const names={orgen:'Orgen Tunggal',semi:'Dangdut Semi',full:'Dangdut Full',akustik:'Paket Lainnya / Akustik'};
  p.push('<div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[560px] text-xs"><thead class="bg-[#4A154B] text-white"><tr><th class="p-2 text-left">Layanan</th><th class="p-2 text-left">Metode</th><th class="p-2 text-right">Nilai</th></tr></thead><tbody>');
@@ -1688,6 +1700,20 @@ function rancageTogglePriceSection(index){
   target.hidden=false;
   target.scrollIntoView({behavior:"smooth",block:"start"});
  }
+}
+function rancageResizeCatalogRows(kind,value){
+ const c=rancageReadPriceForm(),count=Math.max(1,Math.min(30,parseInt(value,10)||1));
+ let rows=kind==="ambu"?c.adat.ambu.rows:kind==="kursus"?c.kursus.rows:c.kostum.rows;
+ rows=Array.isArray(rows)?rows.slice():[];
+ while(rows.length<count){const n=rows.length+1,id=kind+"_custom_"+Date.now()+"_"+n;
+  if(kind==="ambu")rows.push({id,name:"Layanan baru "+n,desc:"",qty:1,price:0});
+  else if(kind==="kursus")rows.push({id,title:"Kursus baru "+n,category:"",desc:"",unit:"paket",qty:1,price:0});
+  else rows.push({id,name:"Kostum baru "+n,include:"",badge:"Pilihan",icon:"fa-shirt",qty:1,price:0});
+ }
+ rows.splice(count);
+ if(kind==="ambu")c.adat.ambu.rows=rows;else if(kind==="kursus")c.kursus.rows=rows;else c.kostum.rows=rows;
+ if(rancageCurrentProfile.role==="admin")rancageBasePriceConfig=rancageClone(c);else rancageActivePriceConfig=rancageClone(c);
+ rancageApply(c);rancageRenderPrices();
 }
 function rancageResizeDangdutRows(pkgId,value){
  const c=rancageReadPriceForm(),count=Math.max(1,Math.min(30,parseInt(value,10)||1));c.dangdut.personilPackages=c.dangdut.personilPackages||{};
