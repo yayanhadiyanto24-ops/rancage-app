@@ -256,22 +256,6 @@
               </div>
             </div>
 
-            <!-- Preset Cepat Upacara Adat -->
-            <div class="mb-5 bg-rancage-cream rounded-xl p-3.5 border border-rancage-gold/40">
-              <span class="text-xs font-bold text-rancage-purple block mb-2"><i class="fa-solid fa-wand-magic-sparkles text-rancage-goldDark mr-1"></i> Preset Formasi Cepat (Opsional):</span>
-              <div class="flex flex-wrap gap-2">
-                <button onclick="applyAdatPreset('hemat')" class="text-xs bg-white hover:bg-rancage-purple hover:text-white text-rancage-purple border border-rancage-purple/30 px-3 py-1.5 rounded-lg font-medium transition">
-                  Formasi Ringkas (Lengser + Ambu + 2 Penari + Pamayung)
-                </button>
-                <button onclick="applyAdatPreset('lengkap')" class="text-xs bg-white hover:bg-rancage-purple hover:text-white text-rancage-purple border border-rancage-purple/30 px-3 py-1.5 rounded-lg font-medium transition">
-                  Formasi Lengkap (Lengser + Ambu + 4 Penari + Baksa + Pamayung)
-                </button>
-                <button onclick="resetAdatSelection()" class="text-xs text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-medium transition">
-                  Reset Adat
-                </button>
-              </div>
-            </div>
-
             <!-- Sub-bagian A: Personil Penari & Pemeran Adat -->
             <div class="mb-6">
               <h3 class="text-sm font-bold text-rancage-purple uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -862,10 +846,22 @@
     function switchTab(tabName) {
       // Tab Upacara Adat adalah pilihan mandiri, bukan Paket Gabungan.
       // Hapus pilihan Dangdut yang mungkin masih tersisa dari tab sebelumnya.
-      if (tabName === 'adat' && state.dangdut.packageId) {
-        clearDangdutPackage();
-        const comboSelect = document.getElementById('combo-dangdut-select');
-        if (comboSelect) comboSelect.value = '';
+      if (tabName === 'adat') {
+        if (state.dangdut.packageId) {
+          clearDangdutPackage();
+          const comboSelect = document.getElementById('combo-dangdut-select');
+          if (comboSelect) comboSelect.value = '';
+        }
+        // Saat Upacara Adat dipilih, isi otomatis semua personil wajib
+        // dengan minimal satu orang agar langsung masuk ke perhitungan.
+        DATA_ADAT_PERSONIL.forEach(item => {
+          const required = isMandatoryAdatPersonil(item);
+          const current = state.adatPersonil[item.id] || {qty:0,tier:'mahir'};
+          if (required && Number(current.qty) < 1) current.qty = 1;
+          state.adatPersonil[item.id] = current;
+        });
+        renderAdatSection();
+        updateCalculator();
       }
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
       document.getElementById('tab-' + tabName).classList.remove('hidden');
