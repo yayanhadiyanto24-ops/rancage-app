@@ -1674,6 +1674,24 @@ function rancageShowUpdatePassword(){rancageRecoveryMode=true;rancageHideAuthBox
 function rancageShowLogin(){rancageRecoveryMode=false;rancageHideAuthBoxes();document.getElementById("rancageLoginBox").classList.remove("hidden");}
 function rancageShowRegister(){rancageHideAuthBoxes();document.getElementById("rancageRegisterBox").classList.remove("hidden");}
 function rancageShowForgotPassword(){rancageHideAuthBoxes();document.getElementById("rancageForgotPasswordBox").classList.remove("hidden");document.getElementById("rancageForgotEmail").value=document.getElementById("rancageLoginEmail").value.trim();}
+function rancageRecoverLegacyAdmin(){
+ const email="penilikbaik1@gmail.com";
+ document.getElementById("rancageLoginEmail").value="AL-BATUKASURI";
+ document.getElementById("rancageForgotEmail").value=email;
+ rancageHideAuthBoxes();
+ document.getElementById("rancageForgotPasswordBox").classList.remove("hidden");
+ const heading=document.querySelector("#rancageForgotPasswordBox h3");
+ const note=document.querySelector("#rancageForgotPasswordBox form").previousElementSibling;
+ heading.textContent="Pulihkan Akun Admin Lama";
+ note.textContent="Pemulihan ditujukan ke akun admin lama yang sudah terhubung. Tautan resmi Supabase akan dikirim ke email terdaftar.";
+ document.getElementById("rancageForgotMessage").classList.add("hidden");
+}
+function rancageHideLegacyRecoveryButton(){
+ const b=document.getElementById("rancageLegacyRecoveryButton");
+ if(b)b.classList.add("hidden");
+ try{localStorage.setItem("rancageLegacyRecoveryCompleted","1");}catch(e){}
+}
+
 function rancageAuthError(msg){const e=document.getElementById("rancageAuthMessage");e.textContent=msg;e.classList.remove("hidden");}
 async function rancageSubmitForgotPassword(e){
  e.preventDefault();const email=document.getElementById("rancageForgotEmail").value.trim().toLowerCase(),el=document.getElementById("rancageForgotMessage");el.classList.add("hidden");
@@ -1713,7 +1731,7 @@ async function rancageAcceptSession(user){
  if(r.error||!r.data){await rancageSupabase.auth.signOut();rancageAuthError("Profil akun belum tersedia. Hubungi Admin Utama.");return;}
  if(r.data.role==="personil"&&!r.data.is_approved){await rancageSupabase.auth.signOut();rancageAuthError("Pendaftaran masih menunggu persetujuan Admin Utama.");return;}
  if(r.data.role!=="admin"&&r.data.role!=="personil"){await rancageSupabase.auth.signOut();rancageAuthError("Akun tidak memiliki hak akses.");return;}
- rancageCurrentUser=user;rancageCurrentProfile=r.data;await rancageLoadPriceContext();
+ rancageCurrentUser=user;rancageCurrentProfile=r.data;if(r.data.role==="admin")rancageHideLegacyRecoveryButton();await rancageLoadPriceContext();
  document.getElementById("rancageAuthArea").classList.add("hidden");document.getElementById("rancageWorkspace").classList.remove("hidden");
  document.getElementById("rancagePanelIdentity").textContent="Akun terverifikasi";document.getElementById("rancageWorkspaceName").textContent=r.data.display_name||user.email;
  document.getElementById("rancageRolePill").textContent=r.data.role==="admin"?"ADMIN UTAMA":"PERSONIL";
@@ -1732,6 +1750,7 @@ async function rancageLogout(){
  document.getElementById("rancageWorkspace").classList.add("hidden");document.getElementById("rancageAuthArea").classList.remove("hidden");rancageShowLogin();showToast("Anda telah keluar dari akun.");
 }
 async function rancageInitialize(){
+ try{if(localStorage.getItem("rancageLegacyRecoveryCompleted")==="1"){const b=document.getElementById("rancageLegacyRecoveryButton");if(b)b.classList.add("hidden");}}catch(e){}
  const hp=new URLSearchParams(window.location.hash.replace(/^#/,""));
  const recoveryLink=hp.get("type")==="recovery"||new URLSearchParams(window.location.search).has("code");
  const s=await rancageSupabase.auth.getSession();
@@ -1763,6 +1782,7 @@ async function rancageInitialize(){
      <button class="w-full rounded-xl p-3 bg-[#4A154B] text-white font-bold" type="submit">Masuk</button>
     </form>
     <p class="text-xs text-gray-500">Admin utama masuk dengan akun terdaftar. Personil harus mendaftar dan menunggu persetujuan Admin Utama.</p>
+    <button id="rancageLegacyRecoveryButton" type="button" onclick="rancageRecoverLegacyAdmin()" class="w-full rounded-xl border-2 border-[#D4AF37] bg-gradient-to-r from-[#4A154B] to-[#2E092F] p-3 text-sm font-bold text-[#F3E5AB] shadow">Pulihkan Akun Admin Lama</button>
     <div class="flex flex-wrap gap-4 items-center">
      <button type="button" onclick="rancageShowForgotPassword()" class="text-sm text-[#4A154B] underline">Lupa kata sandi?</button>
      <button type="button" onclick="rancageShowRegister()" class="text-sm text-[#4A154B] font-bold underline">Daftar akun personil</button>
