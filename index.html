@@ -1533,7 +1533,7 @@ async function rancageLoadPriceContext(){
   const remote=r.data&&r.data.config?r.data.config:{},defaults=rancageBuildDefault(remote);
   rancageBasePriceConfig=remote.customer_price_config?rancageMerge(defaults,remote.customer_price_config):defaults;
   let target=new URLSearchParams(window.location.search).get("personil");
-  if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved&&!target)target=rancageCurrentUser.id;
+  if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved)target=rancageCurrentUser.id;
   rancageCustomerPersonilId=target||null;rancagePriceOverrides={};
   if(target){const p=await rancageSupabase.from("rancage_personil_prices").select("overrides").eq("user_id",target).maybeSingle();if(p.error)throw p.error;rancagePriceOverrides=p.data&&p.data.overrides?p.data.overrides:{};}
   if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved){
@@ -1555,7 +1555,7 @@ function rancageOperationalRows(items,hasDangdut,hasAdat){
 function rancagePriceInput(label,path,value){return '<label class="block space-y-1"><span class="text-xs font-semibold text-gray-700">'+label+'</span><input type="number" min="0" step="1000" data-price-path="'+path+'" value="'+(Number(value)||0)+'" class="w-full rounded-xl border border-purple-200 bg-white p-2.5 text-sm font-bold text-[#4A154B]"></label>';}
 function rancageFeeInput(label,path,fee){const v=fee||{type:"nominal",value:0};return '<div class="rounded-xl border border-[#D4AF37]/50 bg-white p-3 space-y-2"><div class="text-xs font-bold text-[#4A154B]">'+label+'</div><div class="grid grid-cols-2 gap-2"><select data-price-path="'+path+'.type" class="rounded-xl border p-2 text-xs"><option value="nominal" '+(v.type==="nominal"?"selected":"")+'>Nominal (Rp)</option><option value="percent" '+(v.type==="percent"?"selected":"")+'>Persentase (%)</option></select><input type="number" min="0" step="1" data-price-path="'+path+'.value" value="'+(Number(v.value)||0)+'" class="rounded-xl border p-2 text-sm font-bold"></div></div>';}
 function rancageRenderPrices(){
- const c=rancageActivePriceConfig,admin=rancageCurrentProfile.role==="admin",p=[];
+ const admin=rancageCurrentProfile.role==="admin",c=admin?rancageBasePriceConfig:rancageActivePriceConfig,p=[];
  p.push('<div class="bg-white rounded-2xl border border-[#D4AF37]/50 p-4 space-y-3"><h3 class="font-extrabold text-[#4A154B]">Harga Layanan</h3><p class="text-xs text-gray-500">'+(admin?"Harga dasar ini menjadi acuan semua personil.":"Perubahan ini hanya berlaku untuk akun Anda dan pelanggan melalui link pribadi Anda.")+'</p>');
  p.push('<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">'+rancagePriceInput("Tarif per personil Dangdut","dangdut.ratePerPerson",c.dangdut.ratePerPerson)+'</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Upacara Adat — Personil</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
  DATA_ADAT_PERSONIL.forEach(i=>{const x=c.adat.personil[i.id];if(i.hasTier)Object.keys(i.tiers).forEach(t=>p.push(rancagePriceInput(i.name+" — "+(i.tiers[t].label||t),"adat.personil."+i.id+".tiers."+t+".price",x.tiers[t].price)));else p.push(rancagePriceInput(i.name,"adat.personil."+i.id+".price",x.price));});
@@ -1573,7 +1573,7 @@ function rancageRenderPrices(){
  if(!admin)p.push('<button type="button" onclick="rancageAskReset()" class="flex-1 min-w-[150px] rounded-xl border-2 border-[#D4AF37] bg-white text-[#4A154B] p-3 text-sm font-extrabold">↩ Kembali ke Harga Dasar</button>');
  p.push('</div>');document.getElementById("rancagePanelContent").innerHTML=p.join("");
 }
-function rancageReadPriceForm(){const c=rancageClone(rancageActivePriceConfig);document.querySelectorAll("#rancagePanelContent [data-price-path]").forEach(i=>rancageSetPath(c,i.getAttribute("data-price-path"),i.tagName==="SELECT"?i.value:Math.max(0,Number(i.value)||0)));return c;}
+function rancageReadPriceForm(){const c=rancageClone(rancageCurrentProfile.role==="admin"?rancageBasePriceConfig:rancageActivePriceConfig);document.querySelectorAll("#rancagePanelContent [data-price-path]").forEach(i=>rancageSetPath(c,i.getAttribute("data-price-path"),i.tagName==="SELECT"?i.value:Math.max(0,Number(i.value)||0)));return c;}
 async function rancageSavePrices(){
  const next=rancageReadPriceForm();
  try{
@@ -1581,13 +1581,13 @@ async function rancageSavePrices(){
    const current=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").single();if(current.error)throw current.error;
    const conf=Object.assign({},current.data.config||{});conf.customer_price_config=next;
    const saved=await rancageSupabase.from("rancage_app_config").update({config:conf,updated_by:rancageCurrentUser.id}).eq("id","main");if(saved.error)throw saved.error;
-   rancageBasePriceConfig=rancageClone(next);rancagePriceOverrides={};
+   rancageBasePriceConfig=rancageClone(next);
   }else{
    const diff=rancageDiff(rancageBasePriceConfig,next);
    const saved=await rancageSupabase.from("rancage_personil_prices").upsert({user_id:rancageCurrentUser.id,overrides:diff},{onConflict:"user_id"});if(saved.error)throw saved.error;
    rancagePriceOverrides=diff;
   }
-  rancageApply(next);renderDangdutPackages();renderDangdutRoster();renderAdatSection();renderKursusSection();renderKostumSection();updateCalculator();rancageRenderPrices();showToast("Harga berhasil disimpan.");
+  const effective=rancageCurrentProfile.role==="admin"?rancageMerge(rancageBasePriceConfig,rancagePriceOverrides):next;rancageApply(effective);renderDangdutPackages();renderDangdutRoster();renderAdatSection();renderKursusSection();renderKostumSection();updateCalculator();rancageRenderPrices();showToast("Harga berhasil disimpan.");
  }catch(e){console.error(e);showToast("Harga belum tersimpan: "+(e.message||"periksa koneksi"));}
 }
 function rancageAskReset(){const b=document.getElementById("rancageConfirmReset");b.classList.remove("hidden");b.classList.add("flex");}
@@ -1611,7 +1611,7 @@ async function rancageRenderApprovals(){
 }
 async function rancageSetApproval(id,approved){
  const r=await rancageSupabase.from("rancage_profiles").update({is_approved:approved}).eq("user_id",id).eq("role","personil");if(r.error){showToast("Status personil belum berhasil diubah.");return;}
- if(approved){const p=await rancageSupabase.from("rancage_personil_prices").upsert({user_id:id,overrides:{}},{onConflict:"user_id"});if(p.error)console.error(p.error);}
+ 
  showToast(approved?"Personil disetujui.":"Akses personil dinonaktifkan.");rancageRenderApprovals();
 }
 function rancageShowLogin(){document.getElementById("rancageLoginBox").classList.remove("hidden");document.getElementById("rancageRegisterBox").classList.add("hidden");}
