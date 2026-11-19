@@ -326,13 +326,13 @@
               </div>
             </div>
 
-            <!-- Pilihan Paket Bundling -->
+            <!-- Pilihan Paket Paket Gabungan -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <!-- Paket Gabungan Silver -->
               <div class="border-2 border-rancage-gold/40 hover:border-rancage-purple rounded-2xl p-4 bg-rancage-cream/50 transition flex flex-col justify-between">
                 <div>
                   <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-bold bg-rancage-purple/10 text-rancage-purple px-2.5 py-1 rounded-full">Bundling Hemat</span>
+                    <span class="text-xs font-bold bg-rancage-purple/10 text-rancage-purple px-2.5 py-1 rounded-full">Paket Gabungan Hemat</span>
                     <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Hemat Rp 300.000</span>
                   </div>
                   <h3 class="text-lg font-bold text-rancage-purple">Paket Sawargi (Adat Ringkas + Dangdut Semi)</h3>
@@ -348,7 +348,7 @@
                     <span class="text-base font-extrabold text-rancage-purple">Rp 5.700.000</span>
                   </div>
                   <button onclick="applyComboBundle('sawargi')" class="bg-rancage-purple hover:bg-rancage-purpleLight text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition shadow">
-                    Pilih Bundling
+                    Pilih Paket
                   </button>
                 </div>
               </div>
@@ -374,7 +374,7 @@
                     <span class="text-base font-extrabold text-rancage-gold">Rp 8.950.000</span>
                   </div>
                   <button onclick="applyComboBundle('kancana')" class="bg-rancage-gold hover:brightness-110 text-rancage-purpleDark text-xs font-bold px-3.5 py-2 rounded-xl transition shadow">
-                    Pilih Bundling
+                    Pilih Paket
                   </button>
                 </div>
               </div>
@@ -1041,7 +1041,7 @@
                 <span class="font-bold text-xs sm:text-sm text-rancage-purple">${srv.name}</span>
               </div>
               <p class="text-[11px] text-gray-500 mt-0.5">${srv.desc}</p>
-              <span class="inline-block mt-1.5 text-xs font-bold text-rancage-goldDark">${formatRupiah(srv.price)}</span>
+              ${checked ? '<span class="inline-block mt-1.5 text-xs font-bold text-rancage-goldDark">'+formatRupiah(srv.price)+'</span>' : '<span class="inline-block mt-1.5 text-[10px] text-gray-400">Pilih untuk melihat harga</span>'}
             </div>
           </label>
         `;
@@ -1142,7 +1142,7 @@
             </div>
             <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
               <div>
-                <span class="font-extrabold text-sm text-rancage-purple">${formatRupiah(item.price)}</span>
+                <span class="font-extrabold text-sm text-rancage-purple">${qty>0?formatRupiah(item.price):'Pilih untuk melihat harga'}</span>
                 <span class="text-[11px] text-gray-500"> / ${item.unit}</span>
               </div>
               <div class="flex items-center gap-2">
@@ -1182,7 +1182,7 @@
             </div>
             <div class="px-4 pb-4 pt-2 flex items-center justify-between border-t border-gray-100">
               <div>
-                <span class="font-extrabold text-sm text-rancage-purple">${formatRupiah(item.price)}</span>
+                <span class="font-extrabold text-sm text-rancage-purple">${qty>0?formatRupiah(item.price):'Pilih untuk melihat harga'}</span>
                 <span class="text-[11px] text-gray-500"> / set</span>
               </div>
               <div class="flex items-center gap-2">
@@ -1318,13 +1318,12 @@
       container.innerHTML = cartItems.map((item, idx) => `
         <div class="flex items-start justify-between gap-2 bg-rancage-cream/70 p-3 rounded-xl border border-rancage-gold/30 text-xs">
           <div>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-rancage-goldDark block">${item.category}</span>
-            <span class="font-bold text-rancage-purple block mt-0.5">${item.name}</span>
-            <span class="text-[11px] text-gray-500">${item.detail}</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-rancage-goldDark block">${item.isOperationalFee?'Biaya Layanan dan Operasional':item.category}</span>
+            <span class="font-bold text-rancage-purple block mt-0.5">${item.isOperationalFee?'Biaya Layanan dan Operasional':item.name}</span>
+            ${item.isOperationalFee?'':'<span class="text-[11px] text-gray-500">'+item.detail+'</span>'}
           </div>
           <div class="text-right shrink-0">
-            <span class="font-extrabold text-rancage-purple block">${formatRupiah(item.price)}</span>
-            <button onclick="removeCartItemByIndex(${idx})" class="text-[11px] text-red-500 hover:underline mt-1">Hapus</button>
+            ${item.isOperationalFee?'':'<span class="font-extrabold text-rancage-purple block">'+formatRupiah(item.price)+'</span><button onclick="removeCartItemByIndex('+idx+')" class="text-[11px] text-red-500 hover:underline mt-1">Hapus</button>'}
           </div>
         </div>
       `).join('');
@@ -1419,6 +1418,7 @@
       message += `*RINCIAN LAYANAN DIPILIH*\n`;
 
       summary.items.forEach((item, index) => {
+        if(item.isOperationalFee){message += `${index + 1}. Biaya Layanan dan Operasional\n`;return;}
         message += `${index + 1}. [${item.category}] ${item.name} — *${formatRupiah(item.price)}*\n`;
       });
 
@@ -1803,9 +1803,15 @@ async function rancageAddCashExpense(balance){
  if(r.error){showToast("Pengeluaran kas gagal dicatat: "+(r.error.message||"periksa izin"));return;}
  showToast("Pengeluaran kas berhasil dicatat.");rancageRenderCash();
 }
+function rancageShareCustomerLink(){
+ const u=new URL(window.location.href);u.search="";u.hash="";
+ if(rancageCurrentProfile&&rancageCurrentProfile.role==="personil")u.searchParams.set("personil",rancageCurrentUser.id);
+ const msg="Silakan lihat pilihan layanan dan estimasi biaya Sanggar Seni Rancagé: "+u.toString();
+ window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
+}
 function rancageRenderLink(){
  const u=new URL(window.location.href);u.search="";u.hash="";u.searchParams.set("personil",rancageCurrentUser.id);
- document.getElementById("rancagePanelContent").innerHTML='<div class="bg-white rounded-2xl border border-[#D4AF37]/50 p-4 space-y-3"><h3 class="font-bold text-[#4A154B]">Link Pelanggan Saya</h3><p class="text-sm text-gray-600">Bagikan link ini kepada pelanggan agar mereka melihat harga pribadi Anda. Pengunjung lain tetap melihat harga dasar atau harga sesuai link personil yang dibuka.</p><input id="rancagePersonalLinkValue" readonly class="w-full rounded-xl border bg-gray-50 p-3 text-xs" value="'+u.toString()+'"><button onclick="navigator.clipboard.writeText(document.getElementById(\'rancagePersonalLinkValue\').value).then(function(){showToast(\'Link pelanggan berhasil disalin.\')})" class="w-full rounded-xl bg-[#4A154B] text-white p-3 text-sm font-bold">Salin Link Pelanggan</button></div>';
+ document.getElementById("rancagePanelContent").innerHTML='<div class="bg-white rounded-2xl border border-[#D4AF37]/50 p-4 space-y-3"><h3 class="font-bold text-[#4A154B]">Link Pelanggan Saya</h3><p class="text-sm text-gray-600">Bagikan link ini kepada pelanggan agar mereka melihat harga pribadi Anda. Pengunjung lain tetap melihat harga dasar atau harga sesuai link personil yang dibuka.</p><input id="rancagePersonalLinkValue" readonly class="w-full rounded-xl border bg-gray-50 p-3 text-xs" value="'+u.toString()+'"><button onclick="navigator.clipboard.writeText(document.getElementById(\'rancagePersonalLinkValue\').value).then(function(){showToast(\'Link pelanggan berhasil disalin.\')})" class="w-full rounded-xl bg-[#4A154B] text-white p-3 text-sm font-bold">Salin Link Pelanggan</button><button onclick="rancageShareCustomerLink()" class="w-full rounded-xl bg-[#128C4A] text-white p-3 text-sm font-bold">Bagikan ke WhatsApp</button></div>';
 }
 async function rancageRenderApprovals(){
  const c=document.getElementById("rancagePanelContent");c.innerHTML='<div class="p-4 text-sm text-gray-500">Memuat data seluruh personil...</div>';
