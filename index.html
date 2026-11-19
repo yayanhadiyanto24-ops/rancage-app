@@ -1693,8 +1693,9 @@ rancageSupabase.auth.onAuthStateChange((event,session)=>{
  if(event==="PASSWORD_RECOVERY"&&session){rancageHideAuthBoxes();document.getElementById("rancageUpdatePasswordBox").classList.remove("hidden");}
 });
 async function rancageSubmitLogin(e){
- e.preventDefault();const email=document.getElementById("rancageLoginEmail").value.trim().toLowerCase(),password=document.getElementById("rancageLoginPassword").value;
- const r=await rancageSupabase.auth.signInWithPassword({email:email,password:password});if(r.error){rancageAuthError("Login gagal. Periksa email dan kata sandi.");return;}await rancageAcceptSession(r.data.user);
+ e.preventDefault();const loginId=document.getElementById("rancageLoginEmail").value.trim(),normalized=loginId.toUpperCase(),password=document.getElementById("rancageLoginPassword").value;
+ const email=normalized==="AL-BATUKASURI"?"penilikbaik1@gmail.com":loginId.toLowerCase();
+ const r=await rancageSupabase.auth.signInWithPassword({email:email,password:password});if(r.error){rancageAuthError("Login gagal. Periksa nama akun/email dan kata sandi.");return;}await rancageAcceptSession(r.data.user);
 }
 async function rancageSubmitSignup(e){
  e.preventDefault();const name=document.getElementById("rancageRegisterName").value.trim(),email=document.getElementById("rancageRegisterEmail").value.trim().toLowerCase(),password=document.getElementById("rancageRegisterPassword").value,el=document.getElementById("rancageRegisterMessage");el.classList.add("hidden");
@@ -1748,7 +1749,7 @@ async function rancageInitialize(){
    <div id="rancageLoginBox" class="max-w-md mx-auto bg-white rounded-2xl border border-purple-100 p-4 space-y-3">
     <h3 class="font-bold text-[#4A154B]">Login Pengelola</h3>
     <form onsubmit="rancageSubmitLogin(event)" class="space-y-3">
-     <input id="rancageLoginEmail" type="email" required autocomplete="username" placeholder="Email" class="w-full border rounded-xl p-3 text-sm">
+     <input id="rancageLoginEmail" type="text" required autocomplete="username" placeholder="Nama akun admin atau email personil" class="w-full border rounded-xl p-3 text-sm">
      <input id="rancageLoginPassword" type="password" required autocomplete="current-password" placeholder="Kata sandi" class="w-full border rounded-xl p-3 text-sm">
      <button class="w-full rounded-xl p-3 bg-[#4A154B] text-white font-bold" type="submit">Masuk</button>
     </form>
