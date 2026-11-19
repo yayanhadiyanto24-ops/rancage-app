@@ -691,9 +691,8 @@
       }
     ];
 
-    const EXTRA_DANGDUT_ROLES = [
-      'Penyanyi Tambahan', 'Pemain Suling', 'Pemain Gitar', 'MC Acara', 'Penari Latar'
-    ];
+    const EXTRA_DANGDUT_ROLES = ['Penyanyi Tambahan'];
+    let DATA_DANGDUT_PERSONIL_PACKAGES = {};
 
     let DATA_ADAT_PERSONIL = [
       {
@@ -916,18 +915,14 @@
 
       // Render tombol ekstra
       const extraContainer = document.getElementById('dangdut-extra-buttons');
-      extraContainer.innerHTML = EXTRA_DANGDUT_ROLES.map(role => `
-        <button onclick="addDangdutPersonil('${role}')" class="text-[11px] bg-rancage-cream hover:bg-rancage-purple hover:text-white text-rancage-purple border border-rancage-gold/50 px-2.5 py-1 rounded-lg transition font-medium">
-          + ${role}
-        </button>
-      `).join('');
+      extraContainer.innerHTML = state.dangdut.packageId ? `<button onclick="addDangdutPersonil('Penyanyi Tambahan')" class="text-[11px] bg-rancage-cream hover:bg-rancage-purple hover:text-white text-rancage-purple border border-rancage-gold/50 px-2.5 py-1 rounded-lg transition font-medium">+ Tambah Penyanyi</button>` : '';
     }
 
     function selectDangdutPackage(pkgId) {
       const pkg = DATA_DANGDUT_PACKAGES.find(p => p.id === pkgId);
       if (!pkg) return;
       state.dangdut.packageId = pkgId;
-      state.dangdut.roster = [...pkg.roster];
+      state.dangdut.roster = rancageBuildDangdutRoster(pkgId);
       state.comboDiscountOverride = 0;
 
       renderDangdutPackages();
@@ -962,7 +957,7 @@
           </div>
           <div class="flex items-center gap-3">
             <span class="text-gray-500 font-medium">${idx >= (DATA_DANGDUT_PACKAGES.find(p => p.id === state.dangdut.packageId)?.personilCount || 0) ? formatRupiah(state.dangdut.ratePerPerson) : 'Termasuk paket'}</span>
-            ${state.dangdut.roster.length > 1 ? `
+            ${/penyanyi/i.test(String(role)) && state.dangdut.roster.filter(x=>/penyanyi/i.test(String(x))).length > 1 ? `
               <button onclick="removeDangdutPersonil(${idx})" class="text-red-500 hover:text-red-700" title="Hapus personil ini">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
@@ -973,16 +968,37 @@
     }
 
     function addDangdutPersonil(roleName) {
-      state.dangdut.roster.push(roleName);
+      if(!/penyanyi/i.test(String(roleName))){showToast('Hanya jumlah penyanyi yang dapat ditambah di sini.');return;}
+      const count=state.dangdut.roster.filter(x=>/penyanyi/i.test(String(x))).length+1;
+      state.dangdut.roster.push('Penyanyi '+count);
       renderDangdutRoster();
       updateCalculator();
-      showToast(`Ditambahkan: ${roleName}`);
+      showToast('Jumlah penyanyi ditambah.');
     }
 
     function removeDangdutPersonil(index) {
+      const role=String(state.dangdut.roster[index]||'');
+      const singerCount=state.dangdut.roster.filter(x=>/penyanyi/i.test(String(x))).length;
+      if(!/penyanyi/i.test(role)||singerCount<=1){showToast('Personil tetap paket tidak dapat dihapus. Minimal 1 penyanyi.');return;}
       state.dangdut.roster.splice(index, 1);
+      state.dangdut.roster=state.dangdut.roster.map((x,i)=>/penyanyi/i.test(String(x))?'Penyanyi '+(state.dangdut.roster.slice(0,i+1).filter(y=>/penyanyi/i.test(String(y))).length):x);
       renderDangdutRoster();
       updateCalculator();
+    }
+
+    function rancageBuildDangdutRoster(pkgId){
+      const pack=DATA_DANGDUT_PERSONIL_PACKAGES&&DATA_DANGDUT_PERSONIL_PACKAGES[pkgId];
+      if(pack&&Array.isArray(pack.rows)&&pack.rows.length){
+        const roster=[];
+        pack.rows.forEach(row=>{
+          const name=String(row.jenis||'Personil').trim()||'Personil';
+          const qty=Math.max(0,Math.min(30,parseInt(row.qty,10)||0));
+          for(let n=1;n<=qty;n++)roster.push(/penyanyi/i.test(name)?'Penyanyi '+n:name);
+        });
+        if(roster.length)return roster;
+      }
+      const pkg=DATA_DANGDUT_PACKAGES.find(p=>p.id===pkgId);
+      return pkg?[...pkg.roster]:[];
     }
 
     // RENDER TAB 2: UPACARA ADAT
@@ -1602,7 +1618,7 @@ function rancageApply(cfg){
  if(cfg.adat&&Array.isArray(cfg.adat.rows)){DATA_ADAT_PERSONIL.splice(0,DATA_ADAT_PERSONIL.length,...cfg.adat.rows.map((r,i)=>({id:r.id||('personil_'+i),name:r.name||('Personil '+(i+1)),desc:r.desc||'',max:Math.max(1,Number(r.qty)||1),hasTier:!!r.hasTier,price:Math.max(0,Number(r.price)||0),tiers:r.hasTier&&r.tiers?rancageClone(r.tiers):undefined})));}
  state.dangdut.ratePerPerson=Math.max(0,Number(cfg.dangdut.ratePerPerson)||0);
  DATA_DANGDUT_PACKAGES.forEach(i=>{const x=cfg.dangdut.packagePrices&&cfg.dangdut.packagePrices[i.id];if(x&&x.price!=null)i.defaultPrice=Math.max(0,Number(x.price)||0);const r=cfg.dangdut.packageRoster&&cfg.dangdut.packageRoster[i.id];if(r){if(r.name!=null)i.name=String(r.name);if(r.desc!=null)i.desc=String(r.desc);const roster=Array.isArray(r.roster)?r.roster.map(v=>String(v||"").trim()):i.roster;i.roster=roster;i.personilCount=Math.max(1,Number(r.personilCount)||roster.length||1);while(i.roster.length<i.personilCount)i.roster.push("Personil "+(i.roster.length+1));i.roster=i.roster.slice(0,i.personilCount);}else{i.personilCount=i.roster.length;}});
- if(cfg.dangdut&&cfg.dangdut.personilPackages){DATA_DANGDUT_PACKAGES.forEach(i=>{const pack=cfg.dangdut.personilPackages[i.id];if(pack&&Array.isArray(pack.rows)){const total=pack.rows.reduce((n,r)=>n+Math.max(0,Number(r.qty)||0)*Math.max(0,Number(r.harga)||0),0);i.defaultPrice=total;if(cfg.dangdut.packagePrices&&cfg.dangdut.packagePrices[i.id])cfg.dangdut.packagePrices[i.id].price=total;}});}
+ if(cfg.dangdut&&cfg.dangdut.personilPackages){DATA_DANGDUT_PERSONIL_PACKAGES=rancageClone(cfg.dangdut.personilPackages);DATA_DANGDUT_PACKAGES.forEach(i=>{const pack=cfg.dangdut.personilPackages[i.id];if(pack&&Array.isArray(pack.rows)){const total=pack.rows.reduce((n,r)=>n+Math.max(0,Number(r.qty)||0)*Math.max(0,Number(r.harga)||0),0);const count=pack.rows.reduce((n,r)=>n+Math.max(0,Number(r.qty)||0),0);i.defaultPrice=total;i.personilCount=count||i.personilCount;if(cfg.dangdut.packagePrices&&cfg.dangdut.packagePrices[i.id])cfg.dangdut.packagePrices[i.id].price=total;}});}
  if(!Array.isArray(cfg.adat.rows))DATA_ADAT_PERSONIL.forEach(i=>{const x=cfg.adat.personil[i.id];if(!x)return;if(i.hasTier&&x.tiers)Object.keys(i.tiers).forEach(t=>{if(x.tiers[t])i.tiers[t].price=Math.max(0,Number(x.tiers[t].price)||0);});else if(x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
  if(cfg.adat.ambu&&Array.isArray(cfg.adat.ambu.rows)){DATA_AMBU_SERVICES.splice(0,DATA_AMBU_SERVICES.length,...cfg.adat.ambu.rows.map((r,i)=>({id:r.id||('ambu_'+i),name:r.name||('Layanan '+(i+1)),desc:r.desc||'',price:Math.max(0,Number(r.price)||0)})));}
  DATA_AMBU_SERVICES.forEach(i=>{const x=cfg.adat.ambu[i.id];if(x&&x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
