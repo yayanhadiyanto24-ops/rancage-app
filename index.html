@@ -467,7 +467,7 @@
                 <i class="fa-solid fa-receipt"></i>
               </div>
               <div>
-                <h3 class="font-bold text-base leading-tight">Estimasi Biaya Layanan</h3>
+                <h3 class="font-bold text-base leading-tight">Rincian dan Total Biaya</h3>
                 <p class="text-[11px] text-rancage-goldLight">Pilihan, jumlah, dan biaya dihitung otomatis. Setiap biaya ditampilkan.</p>
               </div>
             </div>
@@ -483,7 +483,7 @@
               <div class="text-center py-8 text-gray-400">
                 <i class="fa-solid fa-basket-shopping text-3xl mb-2 text-rancage-gold/50"></i>
                 <p class="text-sm font-medium text-gray-500">Belum ada layanan yang dipilih</p>
-                <p class="text-xs mt-1">Silakan pilih paket atau layanan di sebelah kiri untuk melihat estimasi biaya.</p>
+                <p class="text-xs mt-1">Silakan pilih paket atau layanan di sebelah kiri untuk melihat rincian dan total biaya.</p>
               </div>
             </div>
 
@@ -498,7 +498,7 @@
                 <span id="summary-discount">- Rp 0</span>
               </div>
               <div class="flex justify-between items-center pt-2 border-t border-gray-200">
-                <span class="text-sm font-bold text-rancage-purple">TOTAL ESTIMASI</span>
+                <span class="text-sm font-bold text-rancage-purple">TOTAL BIAYA</span>
                 <span id="summary-total" class="text-xl sm:text-2xl font-extrabold text-rancage-purple">Rp 0</span>
               </div>
               <p class="text-[11px] text-gray-500 italic">*Harga belum termasuk biaya transportasi luar kota (jika ada).</p>
@@ -745,22 +745,6 @@
         max: 2
       },
       {
-        id: 'pemain_keyboard_adat',
-        name: 'Pemain Keyboard (Upacara Adat)',
-        desc: 'Pengiring musik keyboard khusus untuk rangkaian prosesi Upacara Adat Sunda.',
-        hasTier: false,
-        price: 700000,
-        max: 1
-      },
-      {
-        id: 'pemain_kendang_adat',
-        name: 'Pemain Kendang (Upacara Adat)',
-        desc: 'Pengiring tabuhan kendang khusus untuk rangkaian prosesi Upacara Adat Sunda.',
-        hasTier: false,
-        price: 600000,
-        max: 1
-      },
-      {
         id: 'rama_shinta',
         name: 'Rama & Shinta (Sepasang)',
         desc: 'Tarian simbolis kasih sayang abadi pengantin Sunda.',
@@ -882,7 +866,7 @@
     // 3. INISIALISASI RENDER UI
     async function initApp() {
       await rancageInitialize();
-      if(!window._rancageDefaultAdatApplied){state.adatPersonil['penari_putri']={qty:1,tier:'mahir'};state.adatPersonil['pamayung']={qty:1,tier:'mahir'};window._rancageDefaultAdatApplied=true;}
+      DATA_ADAT_PERSONIL.forEach(item=>{state.adatPersonil[item.id]=state.adatPersonil[item.id]||{qty:0,tier:'mahir'};if(isMandatoryAdatPersonil(item))state.adatPersonil[item.id].qty=Math.max(1,Number(state.adatPersonil[item.id].qty)||0);});
       renderDangdutPackages();
       renderAdatSection();
       renderKursusSection();
@@ -1002,53 +986,60 @@
     }
 
     // RENDER TAB 2: UPACARA ADAT
+    function isMandatoryAdatPersonil(item) {
+      const id=String(item&&item.id||'').toLowerCase();
+      const name=String(item&&item.name||'').toLowerCase();
+      return id==='lengser'||id==='ambu'||id==='pamayung'||name.includes('ki lengser')||name.includes('ambu')||name.includes('keyboard')||name.includes('kendang')||name.includes('pamayung');
+    }
+
     function renderAdatSection() {
       const personilContainer = document.getElementById('adat-personil-container');
       personilContainer.innerHTML = DATA_ADAT_PERSONIL.map(item => {
-        if (!state.adatPersonil[item.id]) {
-          state.adatPersonil[item.id] = { qty: 0, tier: 'mahir' };
-        }
+        if (!state.adatPersonil[item.id]) state.adatPersonil[item.id] = { qty: isMandatoryAdatPersonil(item) ? 1 : 0, tier: 'mahir' };
         const current = state.adatPersonil[item.id];
-        const unitPrice = item.hasTier ? item.tiers[current.tier].price : item.price;
+        const tiers = item.tiers || {};
+        const selectedTier = item.hasTier && tiers[current.tier] ? current.tier : (item.hasTier && tiers.mahir ? 'mahir' : Object.keys(tiers)[0]);
+        const unitPrice = item.hasTier && tiers[selectedTier] ? Number(tiers[selectedTier].price)||0 : Number(item.price)||0;
+        const required = isMandatoryAdatPersonil(item);
+        const tierOptions = item.hasTier ? `
+          <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+            ${['cakap','mahir','profesional'].filter(tier=>tiers[tier]).map(tier=>`
+              <label class="flex items-center gap-2 rounded-lg border px-2.5 py-2 cursor-pointer ${selectedTier===tier?'border-rancage-purple bg-rancage-purple/10':'border-gray-200 bg-white'}">
+                <input type="checkbox" ${selectedTier===tier?'checked':''} onchange="if(this.checked)changeAdatTier('${item.id}','${tier}')" class="w-4 h-4 accent-rancage-purple">
+                <span class="text-xs font-semibold text-rancage-purple">${tiers[tier].label||tier}</span>
+                <span class="ml-auto text-[10px] font-bold text-rancage-goldDark">${formatRupiah(tiers[tier].price)}</span>
+              </label>
+            `).join('')}
+          </div>
+        ` : '';
 
         return `
-          <div class="p-3.5 rounded-xl border ${current.qty > 0 ? 'border-rancage-purple bg-rancage-purple/5' : 'border-gray-200 bg-white'} transition">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div class="flex-grow">
-                <div class="flex items-center gap-2">
-                  <h4 class="font-bold text-sm text-rancage-purple">${item.name}</h4>
-                  <span class="text-xs font-semibold text-rancage-goldDark">${formatRupiah(unitPrice)}</span>
-                </div>
-                <p class="text-xs text-gray-500 mt-0.5">${item.desc}</p>
-
-                ${item.hasTier ? `
-                  <div class="mt-2 flex items-center gap-2">
-                    <span class="text-[11px] font-medium text-gray-600">Tingkat Keahlian:</span>
-                    <select onchange="changeAdatTier('${item.id}', this.value)" class="text-xs border border-rancage-gold/60 rounded-lg px-2 py-1 bg-white text-rancage-purple font-medium focus:outline-none">
-                      <option value="cakap" ${current.tier === 'cakap' ? 'selected' : ''}>Cakap (${formatRupiah(item.tiers.cakap.price)})</option>
-                      <option value="mahir" ${current.tier === 'mahir' ? 'selected' : ''}>Mahir (${formatRupiah(item.tiers.mahir.price)})</option>
-                      <option value="profesional" ${current.tier === 'profesional' ? 'selected' : ''}>Profesional (${formatRupiah(item.tiers.profesional.price)})</option>
-                    </select>
+          <div class="p-3 rounded-xl border ${current.qty > 0 ? 'border-rancage-purple bg-rancage-purple/5' : 'border-gray-200 bg-white'} transition">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0 flex-grow">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h4 class="font-bold text-sm text-rancage-purple">${item.name}</h4>
+                    ${required?'<span class="text-[9px] font-bold rounded-full bg-rancage-gold/20 text-rancage-purple px-2 py-0.5">WAJIB</span>':''}
                   </div>
-                ` : ''}
+                  <p class="text-xs text-gray-500 mt-0.5">${item.desc||''}</p>
+                </div>
+                <div class="text-right shrink-0">
+                  <span class="text-xs font-bold text-rancage-goldDark">${formatRupiah(unitPrice)}</span>
+                  <span class="block text-[9px] text-gray-500">per orang/unit</span>
+                </div>
               </div>
-
-              <!-- Stepper Jumlah -->
-              <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
-                <button onclick="updateAdatQty('${item.id}', -1)" class="w-8 h-8 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-rancage-purple font-bold flex items-center justify-center">
-                  <i class="fa-solid fa-minus text-xs"></i>
-                </button>
-                <span class="w-8 text-center font-bold text-sm text-rancage-purple">${current.qty}</span>
-                <button onclick="updateAdatQty('${item.id}', 1)" class="w-8 h-8 rounded-lg bg-rancage-purple hover:bg-rancage-purpleLight text-white font-bold flex items-center justify-center">
-                  <i class="fa-solid fa-plus text-xs"></i>
-                </button>
+              ${tierOptions}
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
+                <label class="text-xs font-semibold text-gray-600" for="adat-qty-${item.id}">Banyaknya ${required?'<span class="text-[9px] text-rancage-goldDark">(minimal 1)</span>':''}</label>
+                <input id="adat-qty-${item.id}" type="number" min="${required?1:0}" max="${Math.max(1,Number(item.max)||100)}" value="${Math.max(required?1:0,Number(current.qty)||0)}" onchange="updateAdatQtyInput('${item.id}',this.value)" class="w-20 rounded-lg border border-rancage-gold/60 bg-white px-2 py-1.5 text-center text-sm font-bold text-rancage-purple">
               </div>
             </div>
           </div>
         `;
       }).join('');
 
-      // Render Layanan Khusus Ambu
+    // Render Layanan Khusus Ambu
       const ambuContainer = document.getElementById('adat-ambu-services-container');
       ambuContainer.innerHTML = DATA_AMBU_SERVICES.map(srv => {
         const checked = !!state.ambuServices[srv.id];
@@ -1067,10 +1058,23 @@
       }).join('');
     }
 
+    function updateAdatQtyInput(id, value) {
+      const item = DATA_ADAT_PERSONIL.find(i => i.id === id);
+      if (!item) return;
+      const minimum = isMandatoryAdatPersonil(item) ? 1 : 0;
+      const maximum = Math.max(minimum, Number(item.max)||100);
+      state.adatPersonil[id] = state.adatPersonil[id] || {qty:minimum,tier:'mahir'};
+      state.adatPersonil[id].qty = Math.max(minimum, Math.min(maximum, parseInt(value,10)||0));
+      state.comboDiscountOverride = 0;
+      renderAdatSection();
+      updateCalculator();
+    }
+
     function updateAdatQty(id, delta) {
       const item = DATA_ADAT_PERSONIL.find(i => i.id === id);
       if (!item) return;
-      const nextQty = Math.max(0, Math.min(item.max, (state.adatPersonil[id].qty || 0) + delta));
+      const minimum = isMandatoryAdatPersonil(item) ? 1 : 0;
+      const nextQty = Math.max(minimum, Math.min(Math.max(minimum,Number(item.max)||100), (state.adatPersonil[id].qty || 0) + delta));
       state.adatPersonil[id].qty = nextQty;
       state.comboDiscountOverride = 0;
       renderAdatSection();
@@ -1117,7 +1121,7 @@
 
     function resetAdatSelection(notify = true) {
       DATA_ADAT_PERSONIL.forEach(i => {
-        state.adatPersonil[i.id] = { qty: 0, tier: 'mahir' };
+        state.adatPersonil[i.id] = { qty: isMandatoryAdatPersonil(i) ? 1 : 0, tier: 'mahir' };
       });
       state.ambuServices = {};
       state.comboDiscountOverride = 0;
@@ -1251,6 +1255,7 @@
           const tierLabel = item.hasTier ? ` - ${sel.tier.toUpperCase()}` : '';
           cartItems.push({
             category: 'Upacara Adat',
+            isMandatory: isMandatoryAdatPersonil(item),
             name: `${item.name}${tierLabel} (x${sel.qty})`,
             detail: `${formatRupiah(unitPrice)} / unit`,
             price: unitPrice * sel.qty,
@@ -1389,7 +1394,7 @@
       state.dangdut.roster = [];
       state.comboDiscountOverride = 0;
       document.getElementById('dangdut-customizer').classList.add('hidden');
-      DATA_ADAT_PERSONIL.forEach(i => state.adatPersonil[i.id] = { qty: 0, tier: 'mahir' });
+      DATA_ADAT_PERSONIL.forEach(i => state.adatPersonil[i.id] = { qty: isMandatoryAdatPersonil(i) ? 1 : 0, tier: 'mahir' });
       state.ambuServices = {};
       state.kursus = {};
       state.kostum = {};
@@ -1441,12 +1446,12 @@
         message += `${index + 1}. [${item.category}] ${item.name} — *${formatRupiah(item.price)}*\n`;
       });
 
-      message += `\n*ESTIMASI BIAYA*\n`;
+      message += `\n*RINCIAN DAN TOTAL BIAYA*\n`;
       message += `• Subtotal: ${formatRupiah(summary.subtotal)}\n`;
       if (summary.discount > 0) {
         message += `• Diskon Paket Gabungan: -${formatRupiah(summary.discount)}\n`;
       }
-      message += `• *TOTAL ESTIMASI: ${formatRupiah(summary.grandTotal)}*\n\n`;
+      message += `• *TOTAL BIAYA: ${formatRupiah(summary.grandTotal)}*\n\n`;
       message += `Mohon informasi ketersediaan jadwal untuk tanggal tersebut. Hatur nuhun!`;
 
       // Simpan pesanan ke database tanpa mewajibkan pelanggan membuat akun.
@@ -1551,6 +1556,20 @@ function rancageSetPath(o,path,v){const p=path.split(".");let t=o;for(let i=0;i<
 function rancageDiff(a,b){
  const o={};Object.keys(b||{}).forEach(k=>{const x=a?a[k]:undefined,y=b[k];if(y&&typeof y==="object"&&!Array.isArray(y)){const d=rancageDiff(x&&typeof x==="object"?x:{},y);if(Object.keys(d).length)o[k]=d;}else if(JSON.stringify(x)!==JSON.stringify(y))o[k]=y;});return o;
 }
+function rancageAdatRoleRank(row){
+ const id=String(row&&row.id||"").toLowerCase(),name=String(row&&row.name||"").toLowerCase();
+ if(id==="lengser"||name.includes("ki lengser"))return 0;
+ if(id==="ambu"||name.includes("ambu"))return 1;
+ if(name.includes("keyboard"))return 2;
+ if(name.includes("kendang"))return 3;
+ if(id==="pamayung"||name.includes("pamayung"))return 4;
+ return 5;
+}
+function rancageOrderAdatRows(cfg){
+ const rows=cfg&&cfg.adat&&cfg.adat.rows;
+ if(Array.isArray(rows))rows.sort((a,b)=>rancageAdatRoleRank(a)-rancageAdatRoleRank(b));
+ return cfg;
+}
 function rancageRemoteFee(remote,cat,key,fallback){const v=remote&&remote[cat]&&remote[cat][key]&&remote[cat][key].serviceFee;return v?rancageClone(v):rancageClone(fallback);}
 function rancageBuildDefault(remote){
  const names={orgen:"Orgen Tunggal",semi:"Dangdut Semi",full:"Dangdut Full",akustik:"Paket Lainnya"};
@@ -1579,16 +1598,6 @@ Object.keys(personilPackages).forEach(id=>{const saved=remote&&remote.customer_p
   kostum:remote&&remote.kostum&&remote.kostum.serviceFee?rancageClone(remote.kostum.serviceFee):{type:"nominal",value:0}
  }};
 }
-function rancageEnsureAdatMusicians(cfg){
- if(!cfg||!cfg.adat)return cfg;
- const rows=Array.isArray(cfg.adat.rows)?cfg.adat.rows:(cfg.adat.rows=[]);
- const required=[
-  {id:"pemain_keyboard_adat",name:"Pemain Keyboard (Upacara Adat)",desc:"Pengiring musik keyboard khusus untuk rangkaian prosesi Upacara Adat Sunda.",qty:1,price:700000,hasTier:false,tiers:null},
-  {id:"pemain_kendang_adat",name:"Pemain Kendang (Upacara Adat)",desc:"Pengiring tabuhan kendang khusus untuk rangkaian prosesi Upacara Adat Sunda.",qty:1,price:600000,hasTier:false,tiers:null}
- ];
- required.forEach(item=>{if(!rows.some(row=>row&&row.id===item.id))rows.push(rancageClone(item));});
- return cfg;
-}
 function rancageApply(cfg){
  if(cfg.adat&&Array.isArray(cfg.adat.rows)){DATA_ADAT_PERSONIL.splice(0,DATA_ADAT_PERSONIL.length,...cfg.adat.rows.map((r,i)=>({id:r.id||('personil_'+i),name:r.name||('Personil '+(i+1)),desc:r.desc||'',max:Math.max(1,Number(r.qty)||1),hasTier:!!r.hasTier,price:Math.max(0,Number(r.price)||0),tiers:r.hasTier&&r.tiers?rancageClone(r.tiers):undefined})));}
  state.dangdut.ratePerPerson=Math.max(0,Number(cfg.dangdut.ratePerPerson)||0);
@@ -1608,8 +1617,6 @@ async function rancageLoadPriceContext(){
   const r=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").maybeSingle();if(r.error)throw r.error;
   const remote=r.data&&r.data.config?r.data.config:{},defaults=rancageBuildDefault(remote);
   rancageBasePriceConfig=remote.customer_price_config?rancageMerge(defaults,remote.customer_price_config):defaults;
-  // Migrasi ringan: personil musik Upacara Adat tetap ditambahkan pada konfigurasi lama.
-  rancageEnsureAdatMusicians(rancageBasePriceConfig);
   if(!remote.customer_price_config||!remote.customer_price_config.adat||!Array.isArray(remote.customer_price_config.adat.rows)){
    rancageBasePriceConfig.adat.rows=DATA_ADAT_PERSONIL.map(i=>{const x=rancageBasePriceConfig.adat.personil[i.id]||{};const tiers=i.hasTier?rancageClone(x.tiers||i.tiers):null;return {id:i.id,name:i.name,desc:i.desc||'',qty:Number(i.max)||1,price:i.hasTier?Number(tiers&&tiers.mahir&&tiers.mahir.price)||0:Number(x.price!=null?x.price:i.price)||0,hasTier:!!i.hasTier,tiers:tiers};});
   }
@@ -1620,7 +1627,8 @@ async function rancageLoadPriceContext(){
   if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved){
    const own=await rancageSupabase.from("rancage_personil_prices").upsert({user_id:rancageCurrentUser.id,overrides:rancagePriceOverrides||{}},{onConflict:"user_id",ignoreDuplicates:true});if(own.error)throw own.error;
   }
-  const effectiveConfig=rancageEnsureAdatMusicians(rancageMerge(rancageBasePriceConfig,rancagePriceOverrides));
+  const effectiveConfig=rancageMerge(rancageBasePriceConfig,rancagePriceOverrides);
+  rancageOrderAdatRows(effectiveConfig);
   rancageApply(effectiveConfig);
  }catch(e){console.error("Muat harga RANCAGÉ:",e);if(!rancageBasePriceConfig)rancageBasePriceConfig=rancageBuildDefault({});rancageApply(rancageBasePriceConfig);showToast("Harga online belum termuat; harga dasar sementara ditampilkan.");}
 }
@@ -1659,7 +1667,8 @@ function rancageRenderPrices(){
  rows.push(row(['+','<b>Personil tambahan</b>','Sesuai kebutuhan','Tarif per orang',priceInput('Tarif personil tambahan Dangdut','dangdut.ratePerPerson',c.dangdut.ratePerPerson)]));
  p.push(table('1. HIBURAN DANGDUT','Rincian formasi personil setiap paket. Harga paket adalah harga dasar formasi; personil di luar formasi dikenakan tarif tambahan per orang.',['No.','Paket / rincian personil','Jumlah','Jenis harga','Harga (Rp)'],rows));
  rows=[];
- const adatRows=Array.isArray(c.adat.rows)?c.adat.rows:DATA_ADAT_PERSONIL.map(i=>({id:i.id,name:i.name,desc:i.desc||'',qty:i.max,price:i.price||0,hasTier:!!i.hasTier,tiers:i.tiers||null}));
+ const adatRows=Array.isArray(c.adat.rows)?c.adat.rows.slice():DATA_ADAT_PERSONIL.map(i=>({id:i.id,name:i.name,desc:i.desc||'',qty:i.max,price:i.price||0,hasTier:!!i.hasTier,tiers:i.tiers||null}));
+ adatRows.sort((a,b)=>rancageAdatRoleRank(a)-rancageAdatRoleRank(b));
  p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div class="flex items-center justify-between gap-3"><div><h3 class="font-extrabold text-[#4A154B]">2. UPACARA ADAT — PERSONIL</h3><p class="text-[11px] text-gray-500">Ubah jumlah baris untuk menambah atau mengurangi jenis personil. Nama, keterangan, banyak, dan harga satuan dapat diedit. Jumlah biaya dihitung otomatis.</p></div><label class="text-[10px] font-bold text-[#4A154B] text-center">Jumlah baris<input id="rancageAdatRowCount" type="number" min="1" max="30" value="'+adatRows.length+'" onchange="rancageResizeAdatRows(this.value)" class="mt-1 w-16 rounded-lg border border-purple-200 p-2 text-center text-sm font-extrabold"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[760px] text-xs text-left"><thead class="bg-[#4A154B] text-white"><tr><th class="p-2">No.</th><th class="p-2">Jenis personil</th><th class="p-2">Keterangan</th><th class="p-2">Banyak</th><th class="p-2">Tingkat / harga satuan</th><th class="p-2 text-right">Jumlah (otomatis)</th></tr></thead><tbody>');
  adatRows.forEach((item,idx)=>{
   const name='<input type="text" data-price-path="adat.rows.'+idx+'.name" value="'+rancageEscapeHtml(item.name)+'" class="w-44 rounded-lg border border-purple-200 p-2 font-semibold">';
