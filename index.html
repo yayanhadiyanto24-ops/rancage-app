@@ -1648,7 +1648,7 @@ function rancageTogglePriceSection(index){
   target.scrollIntoView({behavior:"smooth",block:"start"});
  }
 }
-async function rancageSaveKostumPhotoConfig(next){
+async async function rancageSaveKostumPhotoConfig(next){
  const current=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").single();if(current.error)throw current.error;
  const conf=Object.assign({},current.data.config||{});conf.customer_price_config=next;
  const saved=await rancageSupabase.from("rancage_app_config").update({config:conf,updated_by:rancageCurrentUser.id}).eq("id","main");if(saved.error)throw saved.error;
