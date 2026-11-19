@@ -1668,8 +1668,10 @@ async function rancageSetApproval(id,approved){
  
  showToast(approved?"Personil disetujui.":"Akses personil dinonaktifkan.");rancageRenderApprovals();
 }
+let rancageRecoveryMode=false;
 function rancageHideAuthBoxes(){["rancageLoginBox","rancageRegisterBox","rancageForgotPasswordBox","rancageUpdatePasswordBox"].forEach(id=>document.getElementById(id).classList.add("hidden"));}
-function rancageShowLogin(){rancageHideAuthBoxes();document.getElementById("rancageLoginBox").classList.remove("hidden");}
+function rancageShowUpdatePassword(){rancageRecoveryMode=true;rancageHideAuthBoxes();document.getElementById("rancageUpdatePasswordBox").classList.remove("hidden");}
+function rancageShowLogin(){rancageRecoveryMode=false;rancageHideAuthBoxes();document.getElementById("rancageLoginBox").classList.remove("hidden");}
 function rancageShowRegister(){rancageHideAuthBoxes();document.getElementById("rancageRegisterBox").classList.remove("hidden");}
 function rancageShowForgotPassword(){rancageHideAuthBoxes();document.getElementById("rancageForgotPasswordBox").classList.remove("hidden");document.getElementById("rancageForgotEmail").value=document.getElementById("rancageLoginEmail").value.trim();}
 function rancageAuthError(msg){const e=document.getElementById("rancageAuthMessage");e.textContent=msg;e.classList.remove("hidden");}
@@ -1690,7 +1692,10 @@ async function rancageSubmitNewPassword(e){
  await rancageAcceptSession(r.data.user);
 }
 rancageSupabase.auth.onAuthStateChange((event,session)=>{
- if(event==="PASSWORD_RECOVERY"&&session){rancageHideAuthBoxes();document.getElementById("rancageUpdatePasswordBox").classList.remove("hidden");}
+ if((event==="PASSWORD_RECOVERY"||event==="SIGNED_IN")&&session){
+  const hp=new URLSearchParams(window.location.hash.replace(/^#/,""));
+  if(event==="PASSWORD_RECOVERY"||hp.get("type")==="recovery"||new URLSearchParams(window.location.search).has("code"))rancageShowUpdatePassword();
+ }
 });
 async function rancageSubmitLogin(e){
  e.preventDefault();const loginId=document.getElementById("rancageLoginEmail").value.trim(),normalized=loginId.toUpperCase(),password=document.getElementById("rancageLoginPassword").value;
@@ -1717,7 +1722,8 @@ async function rancageAcceptSession(user){
 }
 async function rancageOpenPanel(){
  const p=document.getElementById("rancageAdminPanel");p.classList.remove("hidden");document.getElementById("rancageAuthArea").classList.remove("hidden");document.getElementById("rancageWorkspace").classList.add("hidden");document.getElementById("rancageAuthMessage").classList.add("hidden");
- const s=await rancageSupabase.auth.getSession();if(s.data&&s.data.session)await rancageAcceptSession(s.data.session.user);
+ if(rancageRecoveryMode)rancageShowUpdatePassword();else rancageShowLogin();
+ const s=await rancageSupabase.auth.getSession();if(s.data&&s.data.session){const hp=new URLSearchParams(window.location.hash.replace(/^#/,""));if(rancageRecoveryMode||hp.get("type")==="recovery"||new URLSearchParams(window.location.search).has("code"))rancageShowUpdatePassword();else await rancageAcceptSession(s.data.session.user);}
 }
 function rancageClosePanel(){document.getElementById("rancageAdminPanel").classList.add("hidden");}
 async function rancageLogout(){
@@ -1726,7 +1732,10 @@ async function rancageLogout(){
  document.getElementById("rancageWorkspace").classList.add("hidden");document.getElementById("rancageAuthArea").classList.remove("hidden");rancageShowLogin();showToast("Anda telah keluar dari akun.");
 }
 async function rancageInitialize(){
+ const hp=new URLSearchParams(window.location.hash.replace(/^#/,""));
+ const recoveryLink=hp.get("type")==="recovery"||new URLSearchParams(window.location.search).has("code");
  const s=await rancageSupabase.auth.getSession();
+ if(recoveryLink&&s.data&&s.data.session)rancageShowUpdatePassword();
  if(s.data&&s.data.session){rancageCurrentUser=s.data.session.user;const p=await rancageSupabase.from("rancage_profiles").select("user_id,display_name,role,is_approved").eq("user_id",rancageCurrentUser.id).maybeSingle();
   if(p.data&&(p.data.role==="admin"||(p.data.role==="personil"&&p.data.is_approved)))rancageCurrentProfile=p.data;else{await rancageSupabase.auth.signOut();rancageCurrentUser=null;}
  }
