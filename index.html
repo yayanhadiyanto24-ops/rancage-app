@@ -121,6 +121,10 @@
   #rancagePanelContent table.rancage-orders-table td.rancage-order-package{width:320px;min-width:220px;max-width:360px;white-space:normal;overflow-wrap:anywhere}
   #rancagePanelContent table.rancage-orders-table td.rancage-order-package span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
   #rancagePanelContent .overflow-x-auto:has(> table.rancage-orders-table){display:block;max-width:100%;overflow-x:auto!important;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+  #rancagePanelContent .rancage-cash-table-wrap{display:block;width:100%;max-width:100%;overflow-x:auto!important;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x}
+  #rancagePanelContent table.rancage-cash-table{width:max-content!important;min-width:100%!important;max-width:none!important;table-layout:auto!important}
+  #rancagePanelContent table.rancage-cash-table th,#rancagePanelContent table.rancage-cash-table td{white-space:nowrap;overflow-wrap:normal}
+  #rancagePanelContent table.rancage-cash-table th:nth-child(5),#rancagePanelContent table.rancage-cash-table td:nth-child(5){min-width:180px;max-width:340px;white-space:normal;overflow-wrap:anywhere}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1828,7 +1832,7 @@ async function rancageRenderCash(){
  html+='<div class="bg-white rounded-2xl border p-3 mt-3"><h3 class="font-bold text-sm text-[#4A154B] mb-2">Buku Kas — Rincian Transaksi</h3>';
  if(!rows.length)html+='<p class="text-xs text-gray-500">Belum ada transaksi kas.</p>';
  else{
- html+='<div class="overflow-x-auto"><table class="min-w-[760px] w-full text-left text-xs"><thead class="bg-[#4A154B] text-white"><tr><th class="p-2">No.</th><th class="p-2">Tanggal</th><th class="p-2">Jenis</th><th class="p-2">ID Pesanan</th><th class="p-2">Uraian</th><th class="p-2 text-right">Persentase</th><th class="p-2 text-right">Nominal</th></tr></thead><tbody>';
+ html+='<div class="overflow-x-auto rancage-cash-table-wrap"><table class="rancage-cash-table text-left text-xs"><thead class="bg-[#4A154B] text-white"><tr><th class="p-2">No.</th><th class="p-2">Tanggal</th><th class="p-2">Jenis</th><th class="p-2">ID Pesanan</th><th class="p-2">Uraian</th><th class="p-2 text-right">Persentase</th><th class="p-2 text-right">Nominal</th></tr></thead><tbody>';
  rows.forEach((x,i)=>{const inc=x.entry_type==="income";html+='<tr class="border-t align-top"><td class="p-2">'+(i+1)+'</td><td class="p-2 whitespace-nowrap">'+rancageEscapeHtml(x.created_at?new Date(x.created_at).toLocaleString("id-ID"):"—")+'</td><td class="p-2 font-bold '+(inc?"text-emerald-700":"text-red-700")+'">'+(inc?"Pemasukan":"Pengeluaran")+'</td><td class="p-2">'+rancageEscapeHtml(x.order_id||"—")+'</td><td class="p-2">'+rancageEscapeHtml(x.description||"—")+'</td><td class="p-2 text-right">'+(inc?(Number(x.rate_percent)||rate).toLocaleString("id-ID")+"%":"—")+'</td><td class="p-2 text-right font-bold whitespace-nowrap '+(inc?"text-emerald-700":"text-red-700")+'">'+(inc?"+":"−")+formatRupiah(Number(x.amount)||0)+'</td></tr>';});
  html+='</tbody></table></div><p class="text-[10px] text-gray-500 mt-2">Menampilkan maksimal 500 transaksi terbaru. Geser tabel ke samping untuk melihat seluruh kolom.</p>';
  }
