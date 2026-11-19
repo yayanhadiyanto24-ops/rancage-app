@@ -1577,12 +1577,13 @@ function rancageRenderPrices(){
  adatRows.forEach((item,idx)=>{
   const name='<input type="text" data-price-path="adat.rows.'+idx+'.name" value="'+rancageEscapeHtml(item.name)+'" class="w-44 rounded-lg border border-purple-200 p-2 font-semibold">';
   const desc='<input type="text" data-price-path="adat.rows.'+idx+'.desc" value="'+rancageEscapeHtml(item.desc||'')+'" class="w-48 rounded-lg border border-purple-200 p-2">';
-  const qty='<input type="number" min="1" max="100" data-price-path="adat.rows.'+idx+'.qty" value="'+(Number(item.qty)||1)+'" class="w-20 rounded-lg border border-purple-200 p-2 text-center font-bold">';
+  const qty='<input type="number" min="1" max="100" data-adat-qty data-price-path="adat.rows.'+idx+'.qty" value="'+(Number(item.qty)||1)+'" oninput="rancageUpdateAdatTotals()" class="w-20 rounded-lg border border-purple-200 p-2 text-center font-bold">';
+  const adatPriceInput=(label,path,value)=>'<input aria-label="'+rancageEscapeHtml(label)+'" type="number" min="0" step="1000" data-adat-price data-price-path="'+path+'" value="'+(Number(value)||0)+'" oninput="rancageUpdateAdatTotals()" class="w-32 rounded-lg border border-purple-200 p-2 text-right font-bold text-[#4A154B]">';
   if(item.hasTier&&item.tiers){
-   Object.keys(item.tiers).forEach((tier,j)=>{const t=item.tiers[tier],price=priceInput(item.name+' '+t.label,'adat.rows.'+idx+'.tiers.'+tier+'.price',t.price);rows.push('<tr class="border-t align-top"><td class="p-2">'+(j===0?idx+1:'')+'</td><td class="p-2">'+(j===0?name:'')+'</td><td class="p-2">'+(j===0?desc:'')+'</td><td class="p-2">'+(j===0?qty:'')+'</td><td class="p-2"><div class="mb-1 text-[10px] text-gray-500">'+rancageEscapeHtml(t.label)+'</div>'+price+'</td><td class="p-2 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(t.price)||0))+'</td></tr>');});
+   Object.keys(item.tiers).forEach((tier,j)=>{const t=item.tiers[tier],price=adatPriceInput(item.name+' '+t.label,'adat.rows.'+idx+'.tiers.'+tier+'.price',t.price);rows.push('<tr data-adat-calc-row class="border-t align-top"><td class="p-2">'+(j===0?idx+1:'')+'</td><td class="p-2">'+(j===0?name:'')+'</td><td class="p-2">'+(j===0?desc:'')+'</td><td class="p-2">'+qty+'</td><td class="p-2"><div class="mb-1 text-[10px] text-gray-500">'+rancageEscapeHtml(t.label)+'</div>'+price+'</td><td data-adat-total class="p-2 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(t.price)||0))+'</td></tr>');});
   }else{
-   const price=priceInput(item.name,'adat.rows.'+idx+'.price',item.price);
-   rows.push('<tr class="border-t align-top"><td class="p-2">'+(idx+1)+'</td><td class="p-2">'+name+'</td><td class="p-2">'+desc+'</td><td class="p-2">'+qty+'</td><td class="p-2">'+price+'</td><td class="p-2 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(item.price)||0))+'</td></tr>');
+   const price=adatPriceInput(item.name,'adat.rows.'+idx+'.price',item.price);
+   rows.push('<tr data-adat-calc-row class="border-t align-top"><td class="p-2">'+(idx+1)+'</td><td class="p-2">'+name+'</td><td class="p-2">'+desc+'</td><td class="p-2">'+qty+'</td><td class="p-2">'+price+'</td><td data-adat-total class="p-2 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(item.price)||0))+'</td></tr>');
   }
  });
  p.push(rows.join('')+'</tbody></table></div></section>');
@@ -1605,6 +1606,14 @@ function rancageRenderPrices(){
  if(!admin)p.push('<button type="button" onclick="rancageAskReset()" class="flex-1 min-w-[150px] rounded-xl border-2 border-[#D4AF37] bg-white text-[#4A154B] p-3 text-sm font-extrabold">↩ Kembali ke Harga Dasar</button>');
  p.push('</div><p class="text-[10px] text-gray-500">Tabel dapat digeser ke samping pada layar HP. Perubahan disimpan ke konfigurasi harga Supabase yang sudah digunakan aplikasi.</p>');
  document.getElementById("rancagePanelContent").innerHTML=p.join("");
+}
+function rancageUpdateAdatTotals(){
+ document.querySelectorAll("#rancagePanelContent tr[data-adat-calc-row]").forEach(tr=>{
+  const qty=Number(tr.querySelector("[data-adat-qty]")?.value)||0;
+  const price=Number(tr.querySelector("[data-adat-price]")?.value)||0;
+  const total=tr.querySelector("[data-adat-total]");
+  if(total)total.textContent=formatRupiah(qty*price);
+ });
 }
 function rancageResizeAdatRows(value){
  const c=rancageReadPriceForm(),rows=Array.isArray(c.adat.rows)?c.adat.rows:[];
