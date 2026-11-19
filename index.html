@@ -986,6 +986,22 @@
       updateCalculator();
     }
 
+    function rancageCalculateDangdutPackageTotal(pkgId, roster){
+      const pack=DATA_DANGDUT_PERSONIL_PACKAGES&&DATA_DANGDUT_PERSONIL_PACKAGES[pkgId];
+      if(!pack||!Array.isArray(pack.rows)||!pack.rows.length){const pkg=DATA_DANGDUT_PACKAGES.find(p=>p.id===pkgId);return pkg?Math.max(0,(Number(pkg.defaultPrice)||0)+(roster.length-pkg.personilCount)*state.dangdut.ratePerPerson):0;}
+      const singerCount=roster.filter(x=>/penyanyi/i.test(String(x))).length;
+      let singerPriced=false,total=0;
+      pack.rows.forEach(row=>{
+        const name=String(row.jenis||'');
+        const qty=Math.max(0,parseInt(row.qty,10)||0);
+        const price=Math.max(0,Number(row.harga)||0);
+        if(/penyanyi/i.test(name)){
+          if(!singerPriced){total+=singerCount*price;singerPriced=true;}
+        }else total+=qty*price;
+      });
+      return Math.max(0,total);
+    }
+
     function rancageBuildDangdutRoster(pkgId){
       const pack=DATA_DANGDUT_PERSONIL_PACKAGES&&DATA_DANGDUT_PERSONIL_PACKAGES[pkgId];
       if(pack&&Array.isArray(pack.rows)&&pack.rows.length){
@@ -1252,11 +1268,11 @@
       if (state.dangdut.packageId && state.dangdut.roster.length > 0) {
         hasDangdut = true;
         const pkg = DATA_DANGDUT_PACKAGES.find(p => p.id === state.dangdut.packageId);
-        const totalDangdut = Math.max(0, (Number(pkg.defaultPrice) || 0) + (state.dangdut.roster.length - pkg.personilCount) * state.dangdut.ratePerPerson);
+        const totalDangdut = rancageCalculateDangdutPackageTotal(pkg.id, state.dangdut.roster);
         cartItems.push({
           category: 'Hiburan Dangdut',
           name: `${pkg.name} (${state.dangdut.roster.length} Personil)`,
-          detail: `Harga paket dasar ${formatRupiah(pkg.defaultPrice)}; personil tambahan ${formatRupiah(state.dangdut.ratePerPerson)}/org`,
+          detail: `Harga dihitung dari jumlah dan harga satuan personil pada tabel Admin/Personil`,
           price: totalDangdut,
           onRemove: () => clearDangdutPackage()
         });
