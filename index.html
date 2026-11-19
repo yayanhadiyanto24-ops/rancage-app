@@ -1080,9 +1080,9 @@
         return `
           <div class="rounded-2xl overflow-hidden border-2 ${qty > 0 ? 'border-rancage-purple bg-rancage-purple/5' : 'border-gray-200 bg-white'} flex flex-col justify-between transition">
             <div>
-              <div class="h-32 bg-gradient-to-br from-rancage-purpleDark via-rancage-purple to-rancage-purpleLight flex items-center justify-center relative">
-                <span class="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider bg-rancage-gold text-rancage-purpleDark px-2.5 py-0.5 rounded-full">${item.badge}</span>
-                <i class="fa-solid ${item.icon} text-4xl text-rancage-goldLight/80"></i>
+              <div class="relative">
+                <span class="absolute top-3 left-3 z-10 text-[10px] font-bold uppercase tracking-wider bg-rancage-gold text-rancage-purpleDark px-2.5 py-0.5 rounded-full">${item.badge}</span>
+                ${Array.isArray(item.photos)&&item.photos.some(p=>p&&p.url)?'<div class="grid grid-cols-2 gap-1">'+item.photos.filter(p=>p&&p.url).map((p,j)=>'<img src="'+rancageEscapeHtml(p.url)+'" alt="'+rancageEscapeHtml(item.name)+' '+(j+1)+'" class="h-32 w-full object-cover">').join('')+'</div>':'<div class="h-32 bg-gradient-to-br from-rancage-purpleDark via-rancage-purple to-rancage-purpleLight flex items-center justify-center"><i class="fa-solid '+item.icon+' text-4xl text-rancage-goldLight/80"></i></div>'}
               </div>
               <div class="p-4">
                 <h3 class="font-bold text-sm text-rancage-purple">${item.name}</h3>
@@ -1494,7 +1494,7 @@ function rancageApply(cfg){
  DATA_AMBU_SERVICES.forEach(i=>{const x=cfg.adat.ambu[i.id];if(x&&x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
  if(cfg.kursus&&Array.isArray(cfg.kursus.rows)){DATA_KURSUS.splice(0,DATA_KURSUS.length,...cfg.kursus.rows.map((r,i)=>({id:r.id||('kursus_'+i),title:r.title||('Kursus '+(i+1)),category:r.category||'',desc:r.desc||'',unit:r.unit||'paket',price:Math.max(0,Number(r.price)||0)})));}
  DATA_KURSUS.forEach(i=>{const x=cfg.kursus[i.id];if(x&&x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
- if(cfg.kostum&&Array.isArray(cfg.kostum.rows)){DATA_KOSTUM.splice(0,DATA_KOSTUM.length,...cfg.kostum.rows.map((r,i)=>({id:r.id||('kostum_'+i),name:r.name||('Kostum '+(i+1)),include:r.include||'',badge:r.badge||'Pilihan',icon:r.icon||'fa-shirt',price:Math.max(0,Number(r.price)||0)})));}
+ if(cfg.kostum&&Array.isArray(cfg.kostum.rows)){DATA_KOSTUM.splice(0,DATA_KOSTUM.length,...cfg.kostum.rows.map((r,i)=>({id:r.id||('kostum_'+i),name:r.name||('Kostum '+(i+1)),include:r.include||'',badge:r.badge||'Pilihan',icon:r.icon||'fa-shirt',photos:Array.isArray(r.photos)?r.photos:[],price:Math.max(0,Number(r.price)||0)})));}
  DATA_KOSTUM.forEach(i=>{const x=cfg.kostum[i.id];if(x&&x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
  rancageActivePriceConfig=rancageClone(cfg);rancageOperationalFees=rancageClone(cfg.fees||{});
 }
@@ -1593,8 +1593,16 @@ function rancageRenderPrices(){
  p.push('</tbody></table></div></section>');
  rows=[];
  const kostumRows=Array.isArray(c.kostum.rows)?c.kostum.rows:[];
- p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-1.5"><div class="flex items-center justify-between gapx-2 py-1"><div><h3 class="font-extrabold text-[#4A154B]">5. SEWA KOSTUM</h3><p class="text-[11px] text-gray-500">Ubah nama, keterangan, jumlah, dan harga sewa.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+kostumRows.length+'" onchange="rancageResizeCatalogRows(\'kostum\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Jenis kostum</th><th>Keterangan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
- kostumRows.forEach((x,i)=>p.push('<tr class="border-t"><td>'+(i+1)+'</td><td><input data-price-path="kostum.rows.'+i+'.name" value="'+rancageEscapeHtml(x.name)+'" class="w-full rounded border p-1"></td><td><input data-price-path="kostum.rows.'+i+'.include" value="'+rancageEscapeHtml(x.include||'')+'" class="w-full rounded border p-1"></td><td><input type="number" min="1" data-price-path="kostum.rows.'+i+'.qty" value="'+(Number(x.qty)||1)+'" class="w-full rounded border p-1"></td><td>'+priceInput(x.name,'kostum.rows.'+i+'.price',x.price)+'</td></tr>'));
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-2"><div class="flex items-center justify-between gap-2 py-1"><div><h3 class="font-extrabold text-[#4A154B]">5. SEWA KOSTUM</h3><p class="text-[11px] text-gray-500">Atur nama, keterangan, jumlah, harga, dan koleksi foto setiap kostum.</p></div><label class="text-[10px] font-bold">Baris<input type="number" min="1" max="30" value="'+kostumRows.length+'" onchange="rancageResizeCatalogRows(\\'kostum\\',this.value)" class="w-14 rounded border p-1"></label></div><div class="overflow-hidden rounded-xl border"><table class="w-full table-fixed text-[10px]"><colgroup><col style="width:6%"><col style="width:34%"><col style="width:30%"><col style="width:10%"><col style="width:20%"></colgroup><thead class="bg-[#4A154B] text-white"><tr><th>No</th><th>Jenis kostum</th><th>Keterangan</th><th>Qty</th><th>Harga</th></tr></thead><tbody>');
+ kostumRows.forEach((x,i)=>{
+  p.push('<tr class="border-t"><td class="px-1 py-1">'+(i+1)+'</td><td class="px-1 py-1"><input data-price-path="kostum.rows.'+i+'.name" value="'+rancageEscapeHtml(x.name)+'" class="w-full min-w-0 box-border rounded border p-1"></td><td class="px-1 py-1"><input data-price-path="kostum.rows.'+i+'.include" value="'+rancageEscapeHtml(x.include||'')+'" class="w-full min-w-0 box-border rounded border p-1"></td><td class="px-1 py-1"><input type="number" min="1" data-price-path="kostum.rows.'+i+'.qty" value="'+(Number(x.qty)||1)+'" class="w-full min-w-0 box-border rounded border p-1 text-center"></td><td class="px-1 py-1">'+priceInput(x.name,'kostum.rows.'+i+'.price',x.price)+'</td></tr>');
+  const photos=Array.isArray(x.photos)?x.photos:[];
+  p.push('<tr class="border-t bg-[#fffaf0]"><td colspan="5" class="p-2"><div class="flex items-center justify-between gap-2"><b class="text-[#4A154B] text-[11px]">Foto '+rancageEscapeHtml(x.name||('Kostum '+(i+1)))+'</b><button type="button" onclick="rancageAddKostumPhotoRow('+i+')" class="rounded-lg bg-[#4A154B] px-2 py-1 text-[10px] font-bold text-white">+ Tambah foto</button></div><div class="mt-1 space-y-1">');
+  photos.forEach((ph,j)=>{
+   p.push('<div class="grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-2 rounded border bg-white p-1"><b class="text-center">'+(j+1)+'.</b><div class="min-w-0"><input type="hidden" data-price-path="kostum.rows.'+i+'.photos.'+j+'.url" value="'+rancageEscapeHtml(ph.url||'')+'"><input type="hidden" data-price-path="kostum.rows.'+i+'.photos.'+j+'.path" value="'+rancageEscapeHtml(ph.path||'')+'">'+(ph.url?'<img src="'+rancageEscapeHtml(ph.url)+'" alt="Foto kostum '+(j+1)+'" class="mb-1 h-16 w-20 rounded object-cover">':'<span class="text-[10px] text-gray-500">Belum ada foto</span>')+'<input type="file" accept="image/jpeg,image/png,image/webp" onchange="rancageUploadKostumPhoto('+i+','+j+',this)" class="block w-full min-w-0 text-[10px]"></div><button type="button" onclick="rancageRemoveKostumPhotoRow('+i+','+j+')" class="rounded bg-red-50 px-2 py-1 text-[10px] font-bold text-red-700">Hapus</button></div>');
+  });
+  p.push('</div></td></tr>');
+ });
  p.push('</tbody></table></div></section>');
  p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-3"><h3 class="font-extrabold text-[#4A154B]">6. BIAYA LAYANAN DAN OPERASIONAL — JATAH PIMPRO</h3><p class="text-[11px] text-gray-500">Biaya operasional menggunakan satu komponen Jatah Pimpro. Tidak ada pemisahan biaya jasa dan transportasi.</p>');
  const names={orgen:'Orgen Tunggal',semi:'Dangdut Semi',full:'Dangdut Full',akustik:'Paket Lainnya / Akustik'};
@@ -1639,6 +1647,40 @@ function rancageTogglePriceSection(index){
   target.hidden=false;
   target.scrollIntoView({behavior:"smooth",block:"start"});
  }
+}
+async function rancageSaveKostumPhotoConfig(next){
+ const current=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").single();if(current.error)throw current.error;
+ const conf=Object.assign({},current.data.config||{});conf.customer_price_config=next;
+ const saved=await rancageSupabase.from("rancage_app_config").update({config:conf,updated_by:rancageCurrentUser.id}).eq("id","main");if(saved.error)throw saved.error;
+ rancageBasePriceConfig=rancageClone(next);rancageActivePriceConfig=rancageClone(next);rancageApply(next);
+ renderKostumSection();rancageRenderPrices();
+}
+function rancageAddKostumPhotoRow(rowIndex){
+ const next=rancageReadPriceForm(),rows=next.kostum.rows||[],row=rows[rowIndex];if(!row)return;
+ row.photos=Array.isArray(row.photos)?row.photos:[];row.photos.push({url:"",path:""});
+ rancageBasePriceConfig=rancageClone(next);rancageRenderPrices();
+}
+async function rancageRemoveKostumPhotoRow(rowIndex,photoIndex){
+ try{
+  const next=rancageReadPriceForm(),row=next.kostum.rows[rowIndex],photo=row&&row.photos&&row.photos[photoIndex];if(!row||!photo)return;
+  if(photo.path){const removed=await rancageSupabase.storage.from("rancage-kostum").remove([photo.path]);if(removed.error)throw removed.error;}
+  row.photos.splice(photoIndex,1);await rancageSaveKostumPhotoConfig(next);showToast("Foto kostum dihapus.");
+ }catch(e){showToast("Foto belum dapat dihapus: "+(e.message||"periksa koneksi"));}
+}
+async function rancageUploadKostumPhoto(rowIndex,photoIndex,input){
+ const file=input&&input.files&&input.files[0];if(!file)return;
+ if(!["image/jpeg","image/png","image/webp"].includes(file.type)){showToast("Gunakan foto JPG, PNG, atau WebP.");input.value="";return;}
+ if(file.size>10*1024*1024){showToast("Ukuran foto maksimal 10 MB.");input.value="";return;}
+ try{
+  const next=rancageReadPriceForm(),row=next.kostum.rows[rowIndex],photo=row&&row.photos&&row.photos[photoIndex];if(!photo)throw new Error("Baris foto tidak ditemukan.");
+  const ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
+  const path="kostum/"+String(row.id||("baris-"+(rowIndex+1))).replace(/[^a-zA-Z0-9_-]/g,"-")+"/"+Date.now()+"-"+Math.random().toString(36).slice(2,9)+"."+ext;
+  const uploaded=await rancageSupabase.storage.from("rancage-kostum").upload(path,file,{contentType:file.type,upsert:false});if(uploaded.error)throw uploaded.error;
+  const publicUrl=rancageSupabase.storage.from("rancage-kostum").getPublicUrl(path).data.publicUrl;
+  photo.url=publicUrl;photo.path=path;
+  await rancageSaveKostumPhotoConfig(next);showToast("Foto kostum berhasil diunggah.");
+ }catch(e){console.error(e);showToast("Unggah foto gagal: "+(e.message||"periksa izin Storage"));}
+ finally{if(input)input.value="";}
 }
 function rancageResizeCatalogRows(kind,value){
  const c=rancageReadPriceForm(),count=Math.max(1,Math.min(30,parseInt(value,10)||1));
