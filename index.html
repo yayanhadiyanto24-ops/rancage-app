@@ -1420,15 +1420,10 @@
       // Buka tab WhatsApp langsung agar tidak diblokir browser saat menunggu database.
       const waTab = window.open('about:blank', '_blank');
       try {
-        const { data: savedOrder, error } = await rancageSupabase
+        const { error } = await rancageSupabase
           .from('rancage_orders')
-          .insert(orderPayload)
-          .select('order_code')
-          .single();
+          .insert(orderPayload);
         if (error) throw error;
-        if (savedOrder?.order_code) {
-          message += `\\n\\n*Kode Pesanan: ${savedOrder.order_code}*`;
-        }
         showToast('Pesanan berhasil dicatat. WhatsApp akan dibuka.');
       } catch (error) {
         console.error('Gagal menyimpan pesanan RANCAGÉ:', error);
