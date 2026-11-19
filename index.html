@@ -304,65 +304,14 @@
               </select>
               <p class="mt-1 text-[10px] text-gray-500">Pilihan dangdut langsung diterapkan tanpa berpindah halaman.</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <!-- Paket Gabungan Silver -->
-              <div class="border-2 border-rancage-gold/40 hover:border-rancage-purple rounded-2xl p-4 bg-rancage-cream/50 transition flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-bold bg-rancage-purple/10 text-rancage-purple px-2.5 py-1 rounded-full">Paket Gabungan Hemat</span>
-                    <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Hemat Rp 300.000</span>
-                  </div>
-                  <h3 class="text-lg font-bold text-rancage-purple">Paket Sawargi (Adat Ringkas + Dangdut Semi)</h3>
-                  <ul class="text-xs text-gray-600 space-y-1.5 mt-3 mb-4">
-                    <li><i class="fa-solid fa-check text-rancage-goldDark mr-1.5"></i>Upacara Adat: Ki Lengser, Ambu, 2 Penari (Mahir), Pamayung</li>
-                    <li><i class="fa-solid fa-check text-rancage-goldDark mr-1.5"></i>Layanan Ambu: Sawér & Sungkem</li>
-                    <li><i class="fa-solid fa-check text-rancage-goldDark mr-1.5"></i>Hiburan: Dangdut Semi (7 Personil)</li>
-                  </ul>
-                </div>
-                <div class="pt-3 border-t border-rancage-gold/30 flex items-center justify-between">
-                  <div>
-                    <span class="text-[11px] text-gray-400 line-through block">Rp 6.000.000</span>
-                    <span class="text-base font-extrabold text-rancage-purple">Rp 5.700.000</span>
-                  </div>
-                  <button onclick="applyComboBundle('sawargi')" class="bg-rancage-purple hover:bg-rancage-purpleLight text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition shadow">
-                    Pilih Paket
-                  </button>
-                </div>
-              </div>
-
-              <!-- Paket Gabungan Gold -->
-              <div class="border-2 border-rancage-gold rounded-2xl p-4 bg-gradient-to-b from-rancage-purpleDark to-rancage-purple text-white transition flex flex-col justify-between shadow-lg relative overflow-hidden">
-                <div class="absolute -right-6 -top-6 w-20 h-20 bg-rancage-gold/20 rounded-full blur-xl"></div>
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-bold bg-rancage-gold text-rancage-purpleDark px-2.5 py-1 rounded-full">Terpopuler • VIP</span>
-                    <span class="text-xs font-bold text-rancage-goldLight bg-white/10 px-2 py-0.5 rounded-full">Hemat Rp 500.000</span>
-                  </div>
-                  <h3 class="text-lg font-bold text-rancage-goldLight">Paket Kancana (Adat Lengkap + Dangdut Full)</h3>
-                  <ul class="text-xs text-gray-200 space-y-1.5 mt-3 mb-4">
-                    <li><i class="fa-solid fa-check text-rancage-gold mr-1.5"></i>Upacara Adat: Ki Lengser, Ambu, 4 Penari (Prof), 2 Baksa, Pamayung</li>
-                    <li><i class="fa-solid fa-check text-rancage-gold mr-1.5"></i>Layanan Ambu: Sawér, Sungkem & MC Wedding</li>
-                    <li><i class="fa-solid fa-check text-rancage-gold mr-1.5"></i>Hiburan: Dangdut Full (10 Personil)</li>
-                  </ul>
-                </div>
-                <div class="pt-3 border-t border-rancage-gold/30 flex items-center justify-between">
-                  <div>
-                    <span class="text-[11px] text-gray-300 line-through block">Rp 9.450.000</span>
-                    <span class="text-base font-extrabold text-rancage-gold">Rp 8.950.000</span>
-                  </div>
-                  <button onclick="applyComboBundle('kancana')" class="bg-rancage-gold hover:brightness-110 text-rancage-purpleDark text-xs font-bold px-3.5 py-2 rounded-xl transition shadow">
-                    Pilih Paket
-                  </button>
-                </div>
-              </div>
-            </div>
+            <p class="mb-6 text-xs text-gray-600">Paket Gabungan hanya satu pilihan: pelanggan menentukan sendiri kombinasi Dangdut dan Upacara Adat.</p>
 
             <!-- Kustomisasi Gabungan Bebas -->
             <div class="bg-rancage-creamDark rounded-xl p-4 border border-rancage-gold/40">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h4 class="text-sm font-bold text-rancage-purple">Ingin Meracik Paket Gabungan Sendiri?</h4>
-                  <p class="text-xs text-gray-600 mt-0.5">Setiap kombinasi <b>Hiburan Dangdut + Upacara Adat</b> otomatis mendapatkan potongan diskon gabungan sebesar <b>Rp 250.000</b> di kalkulator!</p>
+                  <p class="text-xs text-gray-600 mt-0.5">Diskon Paket Gabungan mengikuti nilai yang diatur Admin.</p>
                 </div>
                 <div class="flex gap-2 shrink-0">
                   <span class="text-[10px] text-rancage-purple font-semibold">Paket dangdut dipilih di atas.</span>
@@ -1154,25 +1103,6 @@
       if (notify) showToast('Pilihan Upacara Adat di-reset.');
     }
 
-    // APPLY BUNDLING PAKET GABUNGAN (TAB 3)
-    function applyComboBundle(bundleType) {
-      if (bundleType === 'sawargi') {
-        // Dangdut Semi (7 org * 400rb = 2.8jt) + Adat Ringkas (600+500+800+300 + sawer 350 + sungkem 300 = 2.85jt) -> Total 5.65jt / 6jt -> Diskon 300rb
-        selectDangdutPackage('semi');
-        applyAdatPreset('hemat');
-        state.comboDiscountOverride = 300000;
-        showToast('Paket Gabungan Sawargi berhasil dipilih!');
-      } else if (bundleType === 'kancana') {
-        // Dangdut Full (10 org * 400rb = 4jt) + Adat Lengkap (600+500+2000+1100+300 + sawer 350 + sungkem 300 + mc 750 = 5.9jt)
-        selectDangdutPackage('full');
-        applyAdatPreset('lengkap');
-        state.comboDiscountOverride = 500000;
-        showToast('Paket Gabungan Kancana VIP berhasil dipilih!');
-      }
-      updateCalculator();
-      scrollToCalculator();
-    }
-
     // RENDER TAB 4: KURSUS SENI
     function renderKursusSection() {
       const container = document.getElementById('kursus-container');
@@ -1384,7 +1314,7 @@
       const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
       let discount = 0;
       if (hasDangdut && hasAdat) {
-        discount = state.comboDiscountOverride > 0 ? state.comboDiscountOverride : 250000;
+        discount = Math.max(0, Number((rancageActivePriceConfig && rancageActivePriceConfig.discounts && rancageActivePriceConfig.discounts.gabungan) ?? 500000) || 0);
       }
       const grandTotal = Math.max(0, subtotal - discount);
 
@@ -1621,7 +1551,7 @@ Object.keys(personilPackages).forEach(id=>{const saved=remote&&remote.customer_p
   gabungan:remote&&remote.gabungan&&remote.gabungan.serviceFee?rancageClone(remote.gabungan.serviceFee):{type:"percent",value:10},
   kursus:remote&&remote.kursus&&remote.kursus.serviceFee?rancageClone(remote.kursus.serviceFee):{type:"nominal",value:0},
   kostum:remote&&remote.kostum&&remote.kostum.serviceFee?rancageClone(remote.kostum.serviceFee):{type:"nominal",value:0}
- }};
+ },discounts:{gabungan:500000}};
 }
 function rancageApply(cfg){
  if(cfg.adat&&Array.isArray(cfg.adat.rows)){DATA_ADAT_PERSONIL.splice(0,DATA_ADAT_PERSONIL.length,...cfg.adat.rows.map((r,i)=>({id:r.id||('personil_'+i),name:r.name||('Personil '+(i+1)),desc:r.desc||'',max:Math.max(1,Number(r.qty)||1),hasTier:!!r.hasTier,price:Math.max(0,Number(r.price)||0),tiers:r.hasTier&&r.tiers?rancageClone(r.tiers):undefined})));}
@@ -1740,14 +1670,15 @@ function rancageRenderPrices(){
  Object.keys(names).forEach(id=>p.push('<tr class="border-t"><td class="px-2 py-1">Dangdut — '+names[id]+'</td><td class="px-2 py-1">'+rancageFeeInput('Metode Jatah Pimpro Dangdut '+names[id],'fees.dangdut.'+id,c.fees.dangdut[id])+'</td><td class="px-2 py-1 text-right">'+(c.fees.dangdut[id].type==='percent'?'Persentase':'Nominal')+'</td></tr>'));
  [['Upacara Adat','fees.adat',c.fees.adat],['Paket Gabungan Dangdut + Adat','fees.gabungan',c.fees.gabungan],['Kursus Seni','fees.kursus',c.fees.kursus],['Sewa Kostum','fees.kostum',c.fees.kostum]].forEach(x=>p.push('<tr class="border-t"><td class="px-2 py-1">'+x[0]+'</td><td class="px-2 py-1">'+rancageFeeInput(x[0],' '+x[1],x[2]).replace('data-price-path=" ','data-price-path="')+'</td><td class="px-2 py-1 text-right">'+(x[2].type==='percent'?'Persentase':'Nominal')+'</td></tr>'));
  p.push('</tbody></table></div></section>');
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 px-2 py-1 space-y-1.5"><h3 class="font-extrabold text-[#4A154B]">7. DISKON PAKET GABUNGAN</h3><p class="text-[11px] text-gray-500">Satu nilai diskon untuk setiap pesanan yang menggabungkan Hiburan Dangdut dan Upacara Adat.</p><div class="overflow-x-auto rounded-xl border"><table class="w-full text-xs"><thead class="bg-[#4A154B] text-white"><tr><th class="px-2 py-1 text-left">Jenis diskon</th><th class="px-2 py-1 text-left">Nilai (Rp)</th></tr></thead><tbody><tr><td class="px-2 py-1 font-semibold">Diskon Paket Gabungan</td><td class="px-2 py-1"><input type="number" min="0" step="1000" data-price-path="discounts.gabungan" value="'+(c.discounts&&c.discounts.gabungan!=null?Number(c.discounts.gabungan):500000)+'" aria-label="Diskon Paket Gabungan" class="w-36 rounded-lg border border-purple-200 px-2 py-1 text-right font-bold text-[#4A154B]"></td></tr></tbody></table></div></section>');
  p.push('<div class="flex flex-wrap gapx-2 py-1"><button type="button" onclick="rancageSavePrices()" class="flex-1 min-w-[150px] rounded-xl bg-[#4A154B] text-white p-3 text-sm font-extrabold">Simpan Semua Rincian Harga</button>');
  
  p.push('</div><p class="text-[10px] text-gray-500">Tabel dapat digeser ke samping pada layar HP. Perubahan disimpan ke konfigurasi harga Supabase yang sudah digunakan aplikasi.</p>');
  const root=document.getElementById("rancagePanelContent");
  root.innerHTML=p.join("");
  const sections=Array.from(root.children).filter(el=>el.tagName==="SECTION");
- const accessNames=["Hiburan Dangdut","Upacara Adat — Personil","Layanan Khusus Ambu","Kursus Seni","Sewa Kostum","Jatah Pimpro"];
- const accessIcons=["🎤","🎎","🌿","🎨","👘","💰"];
+ const accessNames=["Hiburan Dangdut","Upacara Adat — Personil","Layanan Khusus Ambu","Kursus Seni","Sewa Kostum","Jatah Pimpro","Diskon Paket Gabungan"];
+ const accessIcons=["🎤","🎎","🌿","🎨","👘","💰","🏷️"];
  const access=document.createElement("div");
  access.className="grid grid-cols-3 gapx-2 py-1 rounded-xl border border-[#D4AF37]/60 bg-[#fffaf0] px-2 py-1";access.dataset.priceAccessMenu="1";
  access.innerHTML='<div class="col-span-2 sm:col-span-3 mb-1"><b class="text-sm text-[#4A154B]">Akses Tabel Pengaturan Harga</b><p class="text-[10px] text-gray-500">Ketuk salah satu tombol untuk membuka tabel yang diperlukan.</p></div>'+accessNames.map((name,i)=>'<button type="button" data-price-access="'+i+'" onclick="rancageTogglePriceSection('+i+')" class="rounded-lg border border-[#D4AF37] bg-white px-1 py-2 text-[10px] font-bold text-[#4A154B]">'+name.replace(" — "," ")+'</button>').join("")+'<button type="button" onclick="rancageShareCustomerLink()" class="col-span-3 rounded-lg bg-[#128C4A] px-2 py-2 text-[11px] font-bold text-white">Bagikan ke WhatsApp</button>';
