@@ -1558,24 +1558,50 @@ function rancagePriceInput(label,path,value){return '<label class="block space-y
 function rancageFeeInput(label,path,fee){const v=fee||{type:"nominal",value:0};return '<div class="rounded-xl border border-[#D4AF37]/50 bg-white p-3 space-y-2"><div class="text-xs font-bold text-[#4A154B]">'+label+'</div><div class="grid grid-cols-2 gap-2"><select data-price-path="'+path+'.type" class="rounded-xl border p-2 text-xs"><option value="nominal" '+(v.type==="nominal"?"selected":"")+'>Nominal (Rp)</option><option value="percent" '+(v.type==="percent"?"selected":"")+'>Persentase (%)</option></select><input type="number" min="0" step="1" data-price-path="'+path+'.value" value="'+(Number(v.value)||0)+'" class="rounded-xl border p-2 text-sm font-bold"></div></div>';}
 function rancageRenderPrices(){
  const admin=rancageCurrentProfile.role==="admin",c=admin?rancageBasePriceConfig:rancageActivePriceConfig,p=[];
- p.push('<div class="bg-white rounded-2xl border border-[#D4AF37]/50 p-4 space-y-3"><h3 class="font-extrabold text-[#4A154B]">Harga Layanan</h3><p class="text-xs text-gray-500">'+(admin?"Harga dasar ini menjadi acuan semua personil.":"Perubahan ini hanya berlaku untuk akun Anda dan pelanggan melalui link pribadi Anda.")+'</p>');
- p.push('<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">'+rancagePriceInput("Tarif personil tambahan Dangdut","dangdut.ratePerPerson",c.dangdut.ratePerPerson));
- DATA_DANGDUT_PACKAGES.forEach(i=>p.push(rancagePriceInput("Harga dasar paket — "+i.name,"dangdut.packagePrices."+i.id+".price",c.dangdut.packagePrices[i.id].price)));
- p.push('</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Upacara Adat — Personil</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
- DATA_ADAT_PERSONIL.forEach(i=>{const x=c.adat.personil[i.id];if(i.hasTier)Object.keys(i.tiers).forEach(t=>p.push(rancagePriceInput(i.name+" — "+(i.tiers[t].label||t),"adat.personil."+i.id+".tiers."+t+".price",x.tiers[t].price)));else p.push(rancagePriceInput(i.name,"adat.personil."+i.id+".price",x.price));});
- p.push('</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Layanan Ambu</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
- DATA_AMBU_SERVICES.forEach(i=>p.push(rancagePriceInput(i.name,"adat.ambu."+i.id+".price",c.adat.ambu[i.id].price)));
- p.push('</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Kursus Seni</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
- DATA_KURSUS.forEach(i=>p.push(rancagePriceInput(i.title,"kursus."+i.id+".price",c.kursus[i.id].price)));
- p.push('</div><h4 class="pt-2 text-sm font-bold text-[#4A154B]">Sewa Kostum</h4><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">');
- DATA_KOSTUM.forEach(i=>p.push(rancagePriceInput(i.name,"kostum."+i.id+".price",c.kostum[i.id].price)));
- p.push('</div></div><div class="bg-white rounded-2xl border border-[#D4AF37]/50 p-4 space-y-3"><h3 class="font-extrabold text-[#4A154B]">Biaya Layanan dan Operasional (Jatah Pimpro)</h3><p class="text-xs text-gray-500">Satu biaya gabungan; tidak ada harga jasa atau transportasi terpisah.</p>');
- const names={orgen:"Orgen Tunggal",semi:"Dangdut Semi",full:"Dangdut Full",akustik:"Paket Lainnya / Akustik"};
- Object.keys(names).forEach(id=>p.push(rancageFeeInput("Dangdut — "+names[id],"fees.dangdut."+id,c.fees.dangdut[id])));
- p.push(rancageFeeInput("Upacara Adat","fees.adat",c.fees.adat),rancageFeeInput("Paket Gabungan Dangdut + Adat","fees.gabungan",c.fees.gabungan),rancageFeeInput("Kursus Seni","fees.kursus",c.fees.kursus),rancageFeeInput("Sewa Kostum","fees.kostum",c.fees.kostum));
- p.push('</div><div class="flex flex-wrap gap-2"><button type="button" onclick="rancageSavePrices()" class="flex-1 min-w-[150px] rounded-xl bg-[#4A154B] text-white p-3 text-sm font-extrabold">Simpan Harga</button>');
+ const money=v=>formatRupiah(Number(v)||0);
+ const table=(title,desc,heads,rows)=>'<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-2"><div><h3 class="font-extrabold text-[#4A154B]">'+title+'</h3><p class="text-[11px] text-gray-500">'+desc+'</p></div><div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[620px] text-xs text-left"><thead class="bg-[#4A154B] text-white"><tr>'+heads.map(h=>'<th class="p-2">'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div></section>';
+ const row=(cells)=>'<tr class="border-t align-top">'+cells.map((v,i)=>'<td class="p-2 '+(i===cells.length-1?'text-right':'')+'">'+v+'</td>').join('')+'</tr>';
+ const priceInput=(label,path,value)=>'<label class="block min-w-[120px]"><span class="sr-only">'+label+'</span><input aria-label="'+label+'" type="number" min="0" step="1000" data-price-path="'+path+'" value="'+(Number(value)||0)+'" class="w-32 rounded-lg border border-purple-200 bg-white p-2 text-right font-bold text-[#4A154B]"></label>';
+ p.push('<div class="rounded-xl border border-[#D4AF37] bg-[#fffaf0] p-3 text-xs text-gray-700"><b class="text-[#4A154B]">Pengaturan rincian harga</b><p class="mt-1">'+(admin?'Harga dasar Admin Utama menjadi acuan bersama seluruh personil.':'Perubahan harga ini berlaku pada link pelanggan pribadi Anda. Harga dasar Admin Utama tetap menjadi acuan awal.')+'</p><p class="mt-1">Setiap harga satuan dapat diubah lalu disimpan. Subtotal pesanan dihitung dari jumlah personil/barang yang dipilih pelanggan.</p></div>');
+ let rows=[];
+ DATA_DANGDUT_PACKAGES.forEach((pkg,idx)=>{
+  rows.push(row(['<b>'+ (idx+1)+'</b>','<b>'+pkg.name+'</b><div class="mt-1 text-[10px] text-gray-500">'+pkg.desc+'</div>','<b>'+pkg.personilCount+' orang</b>','Harga paket',priceInput('Harga paket '+pkg.name,'dangdut.packagePrices.'+pkg.id+'.price',c.dangdut.packagePrices[pkg.id].price)]));
+  pkg.roster.forEach((role,j)=>rows.push(row(['↳ '+(j+1),'<span class="pl-2">'+role+'</span>','1 orang','Termasuk paket','<span class="text-gray-400">—</span>'])));
+ });
+ rows.push(row(['+','<b>Personil tambahan</b>','Sesuai kebutuhan','Tarif per orang',priceInput('Tarif personil tambahan Dangdut','dangdut.ratePerPerson',c.dangdut.ratePerPerson)]));
+ p.push(table('1. HIBURAN DANGDUT','Rincian formasi personil setiap paket. Harga paket adalah harga dasar formasi; personil di luar formasi dikenakan tarif tambahan per orang.',['No.','Paket / rincian personil','Jumlah','Jenis harga','Harga (Rp)'],rows));
+ rows=[];
+ DATA_ADAT_PERSONIL.forEach((item,idx)=>{
+  if(item.hasTier){
+   Object.keys(item.tiers).forEach((tier,j)=>{
+    const x=c.adat.personil[item.id].tiers[tier];
+    rows.push(row([j===0?idx+1:'',j===0?'<b>'+item.name+'</b><div class="text-[10px] text-gray-500">'+item.desc+'</div>':'<span class="pl-3">↳ '+item.name+'</span>',item.max+' maks.',item.tiers[tier].label,priceInput(item.name+' '+tier,'adat.personil.'+item.id+'.tiers.'+tier+'.price',x.price)]));
+   });
+  }else{
+   const x=c.adat.personil[item.id];
+   rows.push(row([idx+1,'<b>'+item.name+'</b><div class="text-[10px] text-gray-500">'+item.desc+'</div>',item.max+' maks.','Harga satuan',priceInput(item.name,'adat.personil.'+item.id+'.price',x.price)]));
+  }
+ });
+ p.push(table('2. UPACARA ADAT — PERSONIL','Setiap jenis personil memiliki batas jumlah dan harga satuan. Penari memiliki tiga tingkat keahlian.',['No.','Jenis personil','Jumlah maksimal','Tingkat / satuan','Harga satuan (Rp)'],rows));
+ rows=[];
+ DATA_AMBU_SERVICES.forEach((item,idx)=>rows.push(row([idx+1,'<b>'+item.name+'</b><div class="text-[10px] text-gray-500">'+item.desc+'</div>','Per layanan','Harga satuan',priceInput(item.name,'adat.ambu.'+item.id+'.price',c.adat.ambu[item.id].price)])));
+ p.push(table('3. LAYANAN KHUSUS AMBU','Rincian setiap prosesi/pemanduan yang dapat dipilih pelanggan.',['No.','Nama layanan','Satuan','Jenis harga','Harga (Rp)'],rows));
+ rows=[];
+ DATA_KURSUS.forEach((item,idx)=>rows.push(row([idx+1,'<b>'+item.title+'</b><div class="text-[10px] text-gray-500">'+item.category+' — '+item.desc+'</div>','Per '+item.unit,'Harga satuan',priceInput(item.title,'kursus.'+item.id+'.price',c.kursus[item.id].price)])));
+ p.push(table('4. KURSUS SENI','Harga per pertemuan atau paket bulanan sesuai jenis kursus.',['No.','Jenis kursus','Satuan harga','Jenis harga','Harga (Rp)'],rows));
+ rows=[];
+ DATA_KOSTUM.forEach((item,idx)=>rows.push(row([idx+1,'<b>'+item.name+'</b><div class="text-[10px] text-gray-500">'+item.include+'</div>','Per set','Harga sewa',priceInput(item.name,'kostum.'+item.id+'.price',c.kostum[item.id].price)])));
+ p.push(table('5. SEWA KOSTUM','Rincian jenis kostum dan perlengkapan yang disewakan.',['No.','Jenis kostum / kelengkapan','Satuan','Jenis harga','Harga (Rp)'],rows));
+ p.push('<section class="bg-white rounded-2xl border border-[#D4AF37]/50 p-3 sm:p-4 space-y-3"><h3 class="font-extrabold text-[#4A154B]">6. BIAYA LAYANAN DAN OPERASIONAL — JATAH PIMPRO</h3><p class="text-[11px] text-gray-500">Biaya operasional menggunakan satu komponen Jatah Pimpro. Tidak ada pemisahan biaya jasa dan transportasi.</p>');
+ const names={orgen:'Orgen Tunggal',semi:'Dangdut Semi',full:'Dangdut Full',akustik:'Paket Lainnya / Akustik'};
+ p.push('<div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[560px] text-xs"><thead class="bg-[#4A154B] text-white"><tr><th class="p-2 text-left">Layanan</th><th class="p-2 text-left">Metode</th><th class="p-2 text-right">Nilai</th></tr></thead><tbody>');
+ Object.keys(names).forEach(id=>p.push('<tr class="border-t"><td class="p-2">Dangdut — '+names[id]+'</td><td class="p-2">'+rancageFeeInput('Metode Jatah Pimpro Dangdut '+names[id],'fees.dangdut.'+id,c.fees.dangdut[id])+'</td><td class="p-2 text-right">'+(c.fees.dangdut[id].type==='percent'?'Persentase':'Nominal')+'</td></tr>'));
+ [['Upacara Adat','fees.adat',c.fees.adat],['Paket Gabungan Dangdut + Adat','fees.gabungan',c.fees.gabungan],['Kursus Seni','fees.kursus',c.fees.kursus],['Sewa Kostum','fees.kostum',c.fees.kostum]].forEach(x=>p.push('<tr class="border-t"><td class="p-2">'+x[0]+'</td><td class="p-2">'+rancageFeeInput(x[0],' '+x[1],x[2]).replace('data-price-path=" ','data-price-path="')+'</td><td class="p-2 text-right">'+(x[2].type==='percent'?'Persentase':'Nominal')+'</td></tr>'));
+ p.push('</tbody></table></div></section>');
+ p.push('<div class="flex flex-wrap gap-2"><button type="button" onclick="rancageSavePrices()" class="flex-1 min-w-[150px] rounded-xl bg-[#4A154B] text-white p-3 text-sm font-extrabold">Simpan Semua Rincian Harga</button>');
  if(!admin)p.push('<button type="button" onclick="rancageAskReset()" class="flex-1 min-w-[150px] rounded-xl border-2 border-[#D4AF37] bg-white text-[#4A154B] p-3 text-sm font-extrabold">↩ Kembali ke Harga Dasar</button>');
- p.push('</div>');document.getElementById("rancagePanelContent").innerHTML=p.join("");
+ p.push('</div><p class="text-[10px] text-gray-500">Tabel dapat digeser ke samping pada layar HP. Perubahan disimpan ke konfigurasi harga Supabase yang sudah digunakan aplikasi.</p>');
+ document.getElementById("rancagePanelContent").innerHTML=p.join("");
 }
 function rancageReadPriceForm(){const c=rancageClone(rancageCurrentProfile.role==="admin"?rancageBasePriceConfig:rancageActivePriceConfig);document.querySelectorAll("#rancagePanelContent [data-price-path]").forEach(i=>rancageSetPath(c,i.getAttribute("data-price-path"),i.tagName==="SELECT"?i.value:Math.max(0,Number(i.value)||0)));return c;}
 async function rancageSavePrices(){
