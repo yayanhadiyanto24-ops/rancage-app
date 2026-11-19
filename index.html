@@ -1724,7 +1724,7 @@ async function rancageSubmitSignup(e){
  e.preventDefault();const name=document.getElementById("rancageRegisterName").value.trim(),email=document.getElementById("rancageRegisterEmail").value.trim().toLowerCase(),password=document.getElementById("rancageRegisterPassword").value,el=document.getElementById("rancageRegisterMessage");el.classList.add("hidden");
  const r=await rancageSupabase.auth.signUp({email:email,password:password,options:{data:{full_name:name}}});
  if(r.error){el.textContent=r.error.message||"Pendaftaran gagal.";el.classList.remove("hidden");return;}
- el.textContent=r.data.session?"Pendaftaran diterima. Akun menunggu persetujuan Admin Utama.":"Pendaftaran dibuat. Verifikasi email jika diminta, lalu tunggu persetujuan Admin Utama.";el.classList.remove("hidden");if(r.data.session)await rancageSupabase.auth.signOut();
+ el.textContent=r.data.session?"Akun berhasil dibuat. Kami akan mengaktifkan hak Admin Utama setelah verifikasi email.":"Akun berhasil didaftarkan. Verifikasi email terlebih dahulu; setelah itu hak Admin Utama akan diaktifkan.";el.classList.remove("hidden");if(r.data.session)await rancageSupabase.auth.signOut();
 }
 async function rancageAcceptSession(user){
  const r=await rancageSupabase.from("rancage_profiles").select("user_id,display_name,role,is_approved").eq("user_id",user.id).maybeSingle();
@@ -1785,7 +1785,7 @@ async function rancageInitialize(){
     <button id="rancageLegacyRecoveryButton" type="button" onclick="rancageRecoverLegacyAdmin()" class="w-full rounded-xl border-2 border-[#D4AF37] bg-gradient-to-r from-[#4A154B] to-[#2E092F] p-3 text-sm font-bold text-[#F3E5AB] shadow">Pulihkan Akun Admin Lama</button>
     <div class="flex flex-wrap gap-4 items-center">
      <button type="button" onclick="rancageShowForgotPassword()" class="text-sm text-[#4A154B] underline">Lupa kata sandi?</button>
-     <button type="button" onclick="rancageShowRegister()" class="text-sm text-[#4A154B] font-bold underline">Daftar akun personil</button>
+     <button type="button" onclick="rancageShowRegister()" class="text-sm text-[#4A154B] font-bold underline">Daftar Admin Utama</button>
     </div>
     <p id="rancageAuthMessage" class="hidden text-xs text-red-600"></p>
    </div>
@@ -1809,12 +1809,12 @@ async function rancageInitialize(){
     <p id="rancageNewPasswordMessage" class="hidden text-xs"></p>
    </div>
    <div id="rancageRegisterBox" class="hidden max-w-md mx-auto bg-white rounded-2xl border border-purple-100 p-4 space-y-3">
-    <h3 class="font-bold text-[#4A154B]">Pendaftaran Personil</h3>
+    <h3 class="font-bold text-[#4A154B]">Pendaftaran Admin Utama</h3>
     <form onsubmit="rancageSubmitSignup(event)" class="space-y-3">
-     <input id="rancageRegisterName" required maxlength="80" placeholder="Nama personil" class="w-full border rounded-xl p-3 text-sm">
+     <input id="rancageRegisterName" required maxlength="80" placeholder="Nama Admin Utama" class="w-full border rounded-xl p-3 text-sm">
      <input id="rancageRegisterEmail" type="email" required autocomplete="email" placeholder="Email aktif" class="w-full border rounded-xl p-3 text-sm">
      <input id="rancageRegisterPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="Kata sandi (minimal 8 karakter)" class="w-full border rounded-xl p-3 text-sm">
-     <button class="w-full rounded-xl p-3 bg-[#4A154B] text-white font-bold" type="submit">Kirim Pendaftaran</button>
+     <button class="w-full rounded-xl p-3 bg-[#4A154B] text-white font-bold" type="submit">Daftar Admin Utama</button>
     </form>
     <button type="button" onclick="rancageShowLogin()" class="text-sm text-[#4A154B] font-bold underline">Kembali ke login</button>
     <p id="rancageRegisterMessage" class="hidden text-xs text-red-600"></p>
