@@ -326,7 +326,14 @@
               </div>
             </div>
 
-            <!-- Pilihan Paket Paket Gabungan -->
+            <!-- Pilih paket dangdut langsung dari halaman gabungan -->
+            <div class="mb-3 rounded-xl border border-rancage-gold/50 bg-white p-3">
+              <label for="combo-dangdut-select" class="block text-xs font-bold text-rancage-purple mb-1">Pilih paket hiburan dangdut</label>
+              <select id="combo-dangdut-select" onchange="if(this.value){selectDangdutPackage(this.value);updateCalculator();showToast('Paket dangdut dipilih. Lanjutkan memilih personil adat di halaman ini.');}" class="w-full rounded-lg border border-rancage-gold px-3 py-2 text-sm text-rancage-purple">
+                <option value="">Pilih paket dangdut</option><option value="orgen">Orgen Tunggal</option><option value="semi">Dangdut Semi</option><option value="full">Dangdut Full</option><option value="akustik">Paket Akustik</option>
+              </select>
+              <p class="mt-1 text-[10px] text-gray-500">Pilihan dangdut langsung diterapkan tanpa berpindah halaman.</p>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <!-- Paket Gabungan Silver -->
               <div class="border-2 border-rancage-gold/40 hover:border-rancage-purple rounded-2xl p-4 bg-rancage-cream/50 transition flex flex-col justify-between">
@@ -388,12 +395,8 @@
                   <p class="text-xs text-gray-600 mt-0.5">Setiap kombinasi <b>Hiburan Dangdut + Upacara Adat</b> otomatis mendapatkan potongan diskon gabungan sebesar <b>Rp 250.000</b> di kalkulator!</p>
                 </div>
                 <div class="flex gap-2 shrink-0">
-                  <button onclick="switchTab('dangdut')" class="text-xs bg-white border border-rancage-purple text-rancage-purple hover:bg-rancage-purple hover:text-white px-3 py-2 rounded-lg font-semibold transition">
-                    + Atur Dangdut
-                  </button>
-                  <button onclick="switchTab('adat')" class="text-xs bg-white border border-rancage-purple text-rancage-purple hover:bg-rancage-purple hover:text-white px-3 py-2 rounded-lg font-semibold transition">
-                    + Atur Adat
-                  </button>
+                  <span class="text-[10px] text-rancage-purple font-semibold">Paket dangdut dipilih di atas.</span>
+                  <button onclick="switchTab('adat')" class="text-xs bg-white border border-rancage-purple text-rancage-purple px-3 py-2 rounded-lg font-semibold">Pilih rincian adat</button>
                 </div>
               </div>
             </div>
