@@ -1679,6 +1679,8 @@ function rancageRenderPrices(){
  access.innerHTML='<div class="col-span-2 sm:col-span-3 mb-1"><b class="text-sm text-[#4A154B]">Akses Tabel Pengaturan Harga</b><p class="text-[10px] text-gray-500">Ketuk salah satu tombol untuk membuka tabel yang diperlukan.</p></div>'+accessNames.map((name,i)=>'<button type="button" data-price-access="'+i+'" onclick="rancageTogglePriceSection('+i+')" class="rounded-lg border border-[#D4AF37] bg-white px-1 py-2 text-[10px] font-bold text-[#4A154B]">'+name.replace(" — "," ")+'</button>').join("")+'<button type="button" onclick="rancageShareCustomerLink()" class="col-span-3 rounded-lg bg-[#128C4A] px-2 py-2 text-[11px] font-bold text-white">Bagikan ke WhatsApp</button>';
  const info=root.firstElementChild;
  if(info)info.insertAdjacentElement("afterend",access);else root.prepend(access);
+ const saveControls=root.querySelector('button[onclick="rancageSavePrices()"]')?.parentElement;
+ if(saveControls)access.insertAdjacentElement("afterend",saveControls);
  sections.forEach((section,i)=>{section.dataset.priceSection=String(i);section.hidden=true;});
 }
 function rancageTogglePriceSection(index){
