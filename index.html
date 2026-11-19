@@ -206,7 +206,7 @@
             </div>
 
             <!-- Pilihan Paket Dangdut (Grid Cards) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="dangdut-packages-container">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full min-w-0" id="dangdut-packages-container">
               <!-- Di-render otomatis oleh JS -->
             </div>
 
@@ -884,14 +884,14 @@
       container.innerHTML = DATA_DANGDUT_PACKAGES.map(pkg => {
         const isSelected = state.dangdut.packageId === pkg.id;
         return `
-          <div onclick="selectDangdutPackage('${pkg.id}')" class="cursor-pointer rounded-xl px-3 py-2 border transition flex items-center justify-between gap-2 min-h-[58px] ${isSelected ? 'border-rancage-purple bg-rancage-purple/5 shadow-sm' : 'border-gray-200 hover:border-rancage-gold bg-white'}">
-            <div class="min-w-0 flex items-center gap-2">
+          <div onclick="selectDangdutPackage('${pkg.id}')" class="w-full min-w-0 cursor-pointer rounded-xl px-3 py-2 border transition flex items-center justify-between gap-2 min-h-[58px] ${isSelected ? 'border-rancage-purple bg-rancage-purple/5 shadow-sm' : 'border-gray-200 hover:border-rancage-gold bg-white'}">
+            <div class="flex-[1_1_0%] min-w-0 flex items-center gap-2">
               ${isSelected ? '<i class="fa-solid fa-circle-check text-rancage-purple text-sm"></i>' : ''}
-              <h3 class="font-bold text-sm text-rancage-purple leading-tight">${pkg.name}</h3>
+              <h3 class="min-w-0 break-words font-bold text-sm text-rancage-purple leading-tight">${pkg.name}</h3>
             </div>
-            <div class="shrink-0 text-right">
+            <div class="shrink-0 max-w-[44%] text-right">
               <span class="block text-[10px] text-gray-500 leading-tight">Mulai Harga</span>
-              <span class="font-extrabold text-sm text-rancage-purple whitespace-nowrap">${formatRupiah(pkg.defaultPrice)}</span>
+              <span class="font-extrabold text-xs sm:text-sm text-rancage-purple whitespace-nowrap">${formatRupiah(pkg.defaultPrice)}</span>
             </div>
           </div>
         `;
@@ -1712,7 +1712,7 @@ function rancageRenderPrices(){
   const qty='<input type="number" min="1" max="100" data-adat-qty data-price-path="adat.rows.'+idx+'.qty" value="'+(Number(item.qty)||1)+'" oninput="rancageUpdateAdatTotals()" class="w-20 rounded-lg border border-purple-200 px-2 py-1 text-center font-bold">';
   const adatPriceInput=(label,path,value)=>'<input aria-label="'+rancageEscapeHtml(label)+'" type="number" min="0" step="1000" data-adat-price data-price-path="'+path+'" value="'+(Number(value)||0)+'" oninput="rancageUpdateAdatTotals()" class="w-32 rounded-lg border border-purple-200 px-2 py-1 text-right font-bold text-[#4A154B]">';
   if(item.hasTier&&item.tiers){
-   Object.keys(item.tiers).forEach((tier,j)=>{const t=item.tiers[tier],price=adatPriceInput(item.name+' '+t.label,'adat.rows.'+idx+'.tiers.'+tier+'.price',t.price);rows.push('<tr data-adat-calc-row class="border-t align-top"><td class="px-2 py-1">'+(j===0?idx+1:'')+'</td><td class="px-2 py-1">'+(j===0?name:'')+'</td><td class="px-2 py-1">'+(j===0?desc:'')+'</td><td class="px-2 py-1">'+qty+'</td><td class="px-2 py-1"><div class="mb-1 text-[10px] text-gray-500">'+rancageEscapeHtml(t.label)+'</div>'+price+'</td><td data-adat-total class="px-2 py-1 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(t.price)||0))+'</td></tr>');});
+   Object.keys(item.tiers).forEach((tier,j)=>{const t=item.tiers[tier],price=adatPriceInput(item.name+' '+t.label,'adat.rows.'+idx+'.tiers.'+tier+'.price',t.price);rows.push('<tr data-adat-calc-row class="align-top"><td class="px-2 py-0.5">'+(j===0?idx+1:'')+'</td><td class="px-2 py-1">'+(j===0?name:'')+'</td><td class="px-2 py-1">'+(j===0?desc:'')+'</td><td class="px-2 py-1">'+qty+'</td><td class="px-2 py-1"><div class="mb-1 text-[10px] text-gray-500">'+rancageEscapeHtml(t.label)+'</div>'+price+'</td><td data-adat-total class="px-2 py-1 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(t.price)||0))+'</td></tr>');});
   }else{
    const price=adatPriceInput(item.name,'adat.rows.'+idx+'.price',item.price);
    rows.push('<tr data-adat-calc-row class="border-t align-top"><td class="px-2 py-1">'+(idx+1)+'</td><td class="px-2 py-1">'+name+'</td><td class="px-2 py-1">'+desc+'</td><td class="px-2 py-1">'+qty+'</td><td class="px-2 py-1">'+price+'</td><td data-adat-total class="px-2 py-1 text-right font-bold text-[#4A154B]">'+money((Number(item.qty)||1)*(Number(item.price)||0))+'</td></tr>');
