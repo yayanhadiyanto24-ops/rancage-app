@@ -1511,7 +1511,7 @@ function rancageBuildDefault(remote){
  DATA_AMBU_SERVICES.forEach(i=>ambu[i.id]={price:Number(i.price)||0});
  DATA_KURSUS.forEach(i=>kursus[i.id]={price:Number(i.price)||0});
  DATA_KOSTUM.forEach(i=>kostum[i.id]={price:Number(i.price)||0});
- const packagePrices={},packageRoster={};DATA_DANGDUT_PACKAGES.forEach(i=>{packagePrices[i.id]={price:Number(i.defaultPrice)||0};packageRoster[i.id]={personilCount:Number(i.personilCount)||i.roster.length,roster:rancageClone(i.roster||[])};});
+ const packagePrices={},packageRoster={};DATA_DANGDUT_PACKAGES.forEach(i=>{packagePrices[i.id]={price:Number(i.defaultPrice)||0};packageRoster[i.id]={name:i.name,desc:i.desc,personilCount:Number(i.personilCount)||i.roster.length,roster:rancageClone(i.roster||[])};});
  return {dangdut:{ratePerPerson:Number(state.dangdut.ratePerPerson)||400000,packagePrices:packagePrices,packageRoster:packageRoster},adat:{personil:personil,rows:DATA_ADAT_PERSONIL.map(i=>({id:i.id,name:i.name,desc:i.desc||'',qty:Number(i.max)||1,price:Number(i.price!=null?i.price:(i.tiers&&i.tiers.mahir&&i.tiers.mahir.price))||0,hasTier:!!i.hasTier,tiers:i.hasTier?rancageClone(i.tiers):null})),ambu:ambu},kursus:kursus,kostum:kostum,fees:{
   dangdut:dfees,
   adat:remote&&remote.adat&&remote.adat.serviceFee?rancageClone(remote.adat.serviceFee):{type:"percent",value:10},
@@ -1523,7 +1523,7 @@ function rancageBuildDefault(remote){
 function rancageApply(cfg){
  if(cfg.adat&&Array.isArray(cfg.adat.rows)){DATA_ADAT_PERSONIL.splice(0,DATA_ADAT_PERSONIL.length,...cfg.adat.rows.map((r,i)=>({id:r.id||('personil_'+i),name:r.name||('Personil '+(i+1)),desc:r.desc||'',max:Math.max(1,Number(r.qty)||1),hasTier:!!r.hasTier,price:Math.max(0,Number(r.price)||0),tiers:r.hasTier&&r.tiers?rancageClone(r.tiers):undefined})));}
  state.dangdut.ratePerPerson=Math.max(0,Number(cfg.dangdut.ratePerPerson)||0);
- DATA_DANGDUT_PACKAGES.forEach(i=>{const x=cfg.dangdut.packagePrices&&cfg.dangdut.packagePrices[i.id];if(x&&x.price!=null)i.defaultPrice=Math.max(0,Number(x.price)||0);const r=cfg.dangdut.packageRoster&&cfg.dangdut.packageRoster[i.id];if(r){const roster=Array.isArray(r.roster)?r.roster.map(v=>String(v||"").trim()).filter(Boolean):i.roster;i.roster=roster;i.personilCount=Math.max(1,Number(r.personilCount)||roster.length||1);while(i.roster.length<i.personilCount)i.roster.push("Personil "+(i.roster.length+1));i.roster=i.roster.slice(0,i.personilCount);}else{i.personilCount=i.roster.length;}});
+ DATA_DANGDUT_PACKAGES.forEach(i=>{const x=cfg.dangdut.packagePrices&&cfg.dangdut.packagePrices[i.id];if(x&&x.price!=null)i.defaultPrice=Math.max(0,Number(x.price)||0);const r=cfg.dangdut.packageRoster&&cfg.dangdut.packageRoster[i.id];if(r){if(r.name!=null)i.name=String(r.name);if(r.desc!=null)i.desc=String(r.desc);const roster=Array.isArray(r.roster)?r.roster.map(v=>String(v||"").trim()):i.roster;i.roster=roster;i.personilCount=Math.max(1,Number(r.personilCount)||roster.length||1);while(i.roster.length<i.personilCount)i.roster.push("Personil "+(i.roster.length+1));i.roster=i.roster.slice(0,i.personilCount);}else{i.personilCount=i.roster.length;}});
  if(!Array.isArray(cfg.adat.rows))DATA_ADAT_PERSONIL.forEach(i=>{const x=cfg.adat.personil[i.id];if(!x)return;if(i.hasTier&&x.tiers)Object.keys(i.tiers).forEach(t=>{if(x.tiers[t])i.tiers[t].price=Math.max(0,Number(x.tiers[t].price)||0);});else if(x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
  DATA_AMBU_SERVICES.forEach(i=>{const x=cfg.adat.ambu[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
  DATA_KURSUS.forEach(i=>{const x=cfg.kursus[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
@@ -1570,7 +1570,7 @@ function rancageRenderPrices(){
  let rows=[];
  DATA_DANGDUT_PACKAGES.forEach((pkg,idx)=>{
   const rosterPath="dangdut.packageRoster."+pkg.id;
-  rows.push(row(['<b>'+(idx+1)+'</b>','<b>'+rancageEscapeHtml(pkg.name)+'</b><div class="mt-1 text-[10px] text-gray-500">'+rancageEscapeHtml(pkg.desc)+'</div>','<input type="number" min="1" max="50" value="'+pkg.personilCount+'" aria-label="Jumlah personil paket '+rancageEscapeHtml(pkg.name)+'" onchange="rancageResizeDangdutRoster(\''+pkg.id+'\',this.value)" class="w-20 rounded-lg border border-purple-200 p-2 text-center font-bold">','Harga paket',priceInput('Harga paket '+pkg.name,'dangdut.packagePrices.'+pkg.id+'.price',c.dangdut.packagePrices[pkg.id].price)]));
+  rows.push(row(['<b>'+(idx+1)+'</b>','<input type="text" data-price-path="'+rosterPath+'.name" value="'+rancageEscapeHtml(pkg.name)+'" aria-label="Nama paket" class="w-52 rounded-lg border border-purple-200 p-2 font-bold"><input type="text" data-price-path="'+rosterPath+'.desc" value="'+rancageEscapeHtml(pkg.desc)+'" aria-label="Keterangan paket" class="mt-1 w-52 rounded-lg border border-purple-200 p-2 text-[10px]">','<input type="number" min="1" max="50" value="'+pkg.personilCount+'" aria-label="Jumlah personil paket '+rancageEscapeHtml(pkg.name)+'" onchange="rancageResizeDangdutRoster(\''+pkg.id+'\',this.value)" class="w-20 rounded-lg border border-purple-200 p-2 text-center font-bold">','Harga paket',priceInput('Harga paket '+pkg.name,'dangdut.packagePrices.'+pkg.id+'.price',c.dangdut.packagePrices[pkg.id].price)]));
   pkg.roster.forEach((role,j)=>rows.push(row(['↳ '+(j+1),'<input type="text" data-price-path="'+rosterPath+'.roster.'+j+'" value="'+rancageEscapeHtml(role)+'" aria-label="Personil '+(j+1)+' paket '+rancageEscapeHtml(pkg.name)+'" class="w-52 rounded-lg border border-purple-200 p-2">','1 orang','Termasuk paket','<span class="text-gray-400">—</span>'])));
  });
  rows.push(row(['+','<b>Personil tambahan</b>','Sesuai kebutuhan','Tarif per orang',priceInput('Tarif personil tambahan Dangdut','dangdut.ratePerPerson',c.dangdut.ratePerPerson)]));
@@ -1619,7 +1619,7 @@ function rancageResizeDangdutRoster(pkgId,value){
  const roster=Array.isArray(current.roster)?current.roster.slice():rancageClone(pkg.roster);
  while(roster.length<count)roster.push("Personil "+(roster.length+1));
  roster.splice(count);
- c.dangdut.packageRoster[pkgId]={personilCount:count,roster:roster};
+ c.dangdut.packageRoster[pkgId]={name:current.name||pkg.name,desc:current.desc||pkg.desc,personilCount:count,roster:roster};
  if(rancageCurrentProfile.role==="admin")rancageBasePriceConfig=rancageClone(c);else rancageActivePriceConfig=rancageClone(c);
  rancageApply(c);rancageRenderPrices();
 }
