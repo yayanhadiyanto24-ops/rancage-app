@@ -1524,7 +1524,7 @@ function rancageApply(cfg){
  if(cfg.adat&&Array.isArray(cfg.adat.rows)){DATA_ADAT_PERSONIL.splice(0,DATA_ADAT_PERSONIL.length,...cfg.adat.rows.map((r,i)=>({id:r.id||('personil_'+i),name:r.name||('Personil '+(i+1)),desc:r.desc||'',max:Math.max(1,Number(r.qty)||1),hasTier:!!r.hasTier,price:Math.max(0,Number(r.price)||0),tiers:r.hasTier&&r.tiers?rancageClone(r.tiers):undefined})));}
  state.dangdut.ratePerPerson=Math.max(0,Number(cfg.dangdut.ratePerPerson)||0);
  DATA_DANGDUT_PACKAGES.forEach(i=>{const x=cfg.dangdut.packagePrices&&cfg.dangdut.packagePrices[i.id];if(x&&x.price!=null)i.defaultPrice=Math.max(0,Number(x.price)||0);});
- DATA_ADAT_PERSONIL.forEach(i=>{const x=cfg.adat.personil[i.id];if(!x)return;if(i.hasTier&&x.tiers)Object.keys(i.tiers).forEach(t=>{if(x.tiers[t])i.tiers[t].price=Math.max(0,Number(x.tiers[t].price)||0);});else if(x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
+ if(!Array.isArray(cfg.adat.rows))DATA_ADAT_PERSONIL.forEach(i=>{const x=cfg.adat.personil[i.id];if(!x)return;if(i.hasTier&&x.tiers)Object.keys(i.tiers).forEach(t=>{if(x.tiers[t])i.tiers[t].price=Math.max(0,Number(x.tiers[t].price)||0);});else if(x.price!=null)i.price=Math.max(0,Number(x.price)||0);});
  DATA_AMBU_SERVICES.forEach(i=>{const x=cfg.adat.ambu[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
  DATA_KURSUS.forEach(i=>{const x=cfg.kursus[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
  DATA_KOSTUM.forEach(i=>{const x=cfg.kostum[i.id];if(x)i.price=Math.max(0,Number(x.price)||0);});
