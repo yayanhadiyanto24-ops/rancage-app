@@ -1535,6 +1535,9 @@ async function rancageLoadPriceContext(){
   const r=await rancageSupabase.from("rancage_app_config").select("config").eq("id","main").maybeSingle();if(r.error)throw r.error;
   const remote=r.data&&r.data.config?r.data.config:{},defaults=rancageBuildDefault(remote);
   rancageBasePriceConfig=remote.customer_price_config?rancageMerge(defaults,remote.customer_price_config):defaults;
+  if(!remote.customer_price_config||!remote.customer_price_config.adat||!Array.isArray(remote.customer_price_config.adat.rows)){
+   rancageBasePriceConfig.adat.rows=DATA_ADAT_PERSONIL.map(i=>{const x=rancageBasePriceConfig.adat.personil[i.id]||{};const tiers=i.hasTier?rancageClone(x.tiers||i.tiers):null;return {id:i.id,name:i.name,desc:i.desc||'',qty:Number(i.max)||1,price:i.hasTier?Number(tiers&&tiers.mahir&&tiers.mahir.price)||0:Number(x.price!=null?x.price:i.price)||0,hasTier:!!i.hasTier,tiers:tiers};});
+  }
   let target=new URLSearchParams(window.location.search).get("personil");
   if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved)target=rancageCurrentUser.id;
   rancageCustomerPersonilId=target||null;rancagePriceOverrides={};
