@@ -228,6 +228,10 @@
               <div id="dangdut-personil-list" class="space-y-2.5">
                 <!-- Di-render otomatis oleh JS -->
               </div>
+              <label class="mt-3 flex items-center gap-2 rounded-xl border border-rancage-gold/50 bg-rancage-cream px-3 py-2.5 text-xs font-semibold text-rancage-purple">
+                <input id="dangdut-checksound" type="checkbox" onchange="setDangdutChecksound(this.checked)" class="h-4 w-4 accent-[#4A154B]">
+                <span>Tambah CheckSound <span class="font-normal text-gray-600">(biaya 50% dari harga asli Dangdut)</span></span>
+              </label>
 
               <!-- Tambah Personil Ekstra di luar paket -->
               <div class="mt-4 pt-3 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
@@ -282,6 +286,10 @@
                 <option value="">Pilih paket dangdut</option><option value="orgen">Orgen Tunggal</option><option value="semi">Dangdut Semi</option><option value="full">Dangdut Full</option><option value="akustik">Paket Akustik</option>
               </select>
               <p class="mt-1 text-[10px] text-gray-500">Pilihan dangdut langsung diterapkan tanpa berpindah halaman.</p>
+              <label class="mt-2 flex items-center gap-2 rounded-xl border border-rancage-gold/50 bg-rancage-cream px-3 py-2.5 text-xs font-semibold text-rancage-purple">
+                <input id="combo-dangdut-checksound" type="checkbox" onchange="setDangdutChecksound(this.checked)" class="h-4 w-4 accent-[#4A154B]">
+                <span>Tambah CheckSound <span class="font-normal text-gray-600">(50% dari harga asli Dangdut saja)</span></span>
+              </label>
             </div>
             <p class="mb-6 text-xs text-gray-600">Paket Gabungan hanya satu pilihan: pelanggan menentukan sendiri kombinasi Dangdut dan Upacara Adat.</p>
 
@@ -740,7 +748,8 @@
     let state = {
       dangdut: {
         packageId: null,
-        roster: [] // array of strings
+        roster: [],
+        checksound: false // tambahan CheckSound opsional
       },
       adatPersonil: {
         // id: { qty: 0, tier: 'mahir' }
@@ -837,6 +846,9 @@
       if (!pkg) return;
       state.dangdut.packageId = pkgId;
       state.dangdut.roster = rancageBuildDangdutRoster(pkgId);
+      state.dangdut.checksound = false;
+      const checkboxes = ['dangdut-checksound','combo-dangdut-checksound'];
+      checkboxes.forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
       state.comboDiscountOverride = 0;
 
       renderDangdutPackages();
@@ -848,9 +860,17 @@
     function clearDangdutPackage() {
       state.dangdut.packageId = null;
       state.dangdut.roster = [];
+      state.dangdut.checksound = false;
+      ['dangdut-checksound','combo-dangdut-checksound'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
       state.comboDiscountOverride = 0;
       document.getElementById('dangdut-customizer').classList.add('hidden');
       renderDangdutPackages();
+      updateCalculator();
+    }
+
+    function setDangdutChecksound(checked) {
+      state.dangdut.checksound = !!checked && !!state.dangdut.packageId;
+      ['dangdut-checksound','combo-dangdut-checksound'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=state.dangdut.checksound;});
       updateCalculator();
     }
 
@@ -1131,6 +1151,15 @@
           price: totalDangdut,
           onRemove: () => clearDangdutPackage()
         });
+        if(state.dangdut.checksound){
+          cartItems.push({
+            category: 'Tambahan Dangdut',
+            name: 'CheckSound (50% dari harga asli Dangdut)',
+            detail: 'Dihitung dari harga Dangdut saja, termasuk pada Paket Gabungan',
+            price: Math.round(totalDangdut * 0.5),
+            onRemove: () => setDangdutChecksound(false)
+          });
+        }
       }
 
       // 2. Cek Adat Personil
@@ -1279,6 +1308,8 @@
     function resetAllSelections() {
       state.dangdut.packageId = null;
       state.dangdut.roster = [];
+      state.dangdut.checksound = false;
+      ['dangdut-checksound','combo-dangdut-checksound'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
       state.comboDiscountOverride = 0;
       document.getElementById('dangdut-customizer').classList.add('hidden');
       DATA_ADAT_PERSONIL.forEach(i => state.adatPersonil[i.id] = { qty: 0, tier: 'mahir' });
