@@ -730,7 +730,7 @@
     const DATA_AMBU_SERVICES = [
       { id: 'sawer', name: 'Prosesi Sawér Pangantén', desc: 'Tembang wejangan & tabur beras kunyit/uang.', price: 350000 },
       { id: 'sungkem', name: 'Pemandu Sungkeman', desc: 'Narasi haru & tuntunan sungkem kepada orang tua.', price: 300000 },
-      { id: 'mc_wedding', name: 'MC Wedding Adat Sunda', desc: 'Pembawa acara akad & resepsi bilingual (Sunda-Indo).', price: 750000 },
+      { id: 'mc_wedding', name: 'MC Wedding oleh Ambu', desc: '', price: 300000 },
       { id: 'bantayan', name: 'Prosesi Bantayan / Huap Lingkung', desc: 'Simbolis suapan terakhir orang tua & buka pintu.', price: 300000 },
       { id: 'siraman', name: 'Prosesi Siraman & Ngeuyeuk Seureuh', desc: 'Upacara pra-nikah lengkap dengan narasi adat.', price: 850000 }
     ];
@@ -1050,7 +1050,6 @@
                     <h4 class="font-bold text-sm text-rancage-purple">${item.name}</h4>
                     ${required?'<span class="text-[9px] font-bold rounded-full bg-rancage-gold/20 text-rancage-purple px-2 py-0.5">WAJIB</span>':''}
                   </div>
-                  <p class="text-xs text-gray-500 mt-0.5">${item.desc||''}</p>
                 </div>
                 <div class="text-right shrink-0">
                   <span class="text-xs font-bold text-rancage-goldDark">${formatRupiah(unitPrice)}</span>
@@ -1645,6 +1644,27 @@ async function rancageLoadPriceContext(){
   if(!remote.customer_price_config||!remote.customer_price_config.adat||!Array.isArray(remote.customer_price_config.adat.rows)){
    rancageBasePriceConfig.adat.rows=DATA_ADAT_PERSONIL.map(i=>{const x=rancageBasePriceConfig.adat.personil[i.id]||{};const tiers=i.hasTier?rancageClone(x.tiers||i.tiers):null;return {id:i.id,name:i.name,desc:i.desc||'',qty:Number(i.max)||1,price:i.hasTier?Number(tiers&&tiers.mahir&&tiers.mahir.price)||0:Number(x.price!=null?x.price:i.price)||0,hasTier:!!i.hasTier,tiers:tiers};});
   }
+  // Pastikan keyboard dan kendang tetap ada pada konfigurasi Adat lama.
+  const wajibAdat=[
+   {id:"pemain_keyboard",name:"Pemain Keyboard",desc:"",qty:1,price:700000,hasTier:false,tiers:null},
+   {id:"pemain_kendang",name:"Pemain Kendang",desc:"",qty:1,price:600000,hasTier:false,tiers:null}
+  ];
+  if(!Array.isArray(rancageBasePriceConfig.adat.rows))rancageBasePriceConfig.adat.rows=[];
+  wajibAdat.forEach(w=>{
+   const found=rancageBasePriceConfig.adat.rows.some(x=>
+    String(x.id||"").toLowerCase()===w.id ||
+    (w.id==="pemain_keyboard" && /keyboard/i.test(String(x.name||""))) ||
+    (w.id==="pemain_kendang" && /kendang/i.test(String(x.name||"")))
+   );
+   if(!found)rancageBasePriceConfig.adat.rows.push(rancageClone(w));
+  });
+  // MC Wedding oleh Ambu terpisah dari MC Khusus.
+  if(!rancageBasePriceConfig.adat.ambu)rancageBasePriceConfig.adat.ambu={};
+  if(!Array.isArray(rancageBasePriceConfig.adat.ambu.rows))rancageBasePriceConfig.adat.ambu.rows=[];
+  let mcWedding=rancageBasePriceConfig.adat.ambu.rows.find(x=>x.id==="mc_wedding"||/mc wedding/i.test(String(x.name||"")));
+  if(mcWedding){mcWedding.id="mc_wedding";mcWedding.name="MC Wedding oleh Ambu";mcWedding.price=300000;mcWedding.desc="";}
+  else rancageBasePriceConfig.adat.ambu.rows.push({id:"mc_wedding",name:"MC Wedding oleh Ambu",desc:"",qty:1,price:300000});
+  rancageBasePriceConfig.adat.ambu.mc_wedding={price:300000};
   let target=new URLSearchParams(window.location.search).get("personil");
   if(rancageCurrentUser&&rancageCurrentProfile&&rancageCurrentProfile.role==="personil"&&rancageCurrentProfile.is_approved)target=rancageCurrentUser.id;
   rancageCustomerPersonilId=target||null;rancagePriceOverrides={};
