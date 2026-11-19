@@ -1,1 +1,1436 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RANCAGÉ APP - Sanggar Seni Rancagé Al-Batukasuri</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Poppins & Cinzel Decorative -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            rancage: {
+              purple: '#4A154B',
+              purpleDark: '#2E092F',
+              purpleLight: '#6D236F',
+              gold: '#D4AF37',
+              goldLight: '#F3E5AB',
+              goldDark: '#AA820A',
+              cream: '#FDFBF7',
+              creamDark: '#F4EFE6'
+            }
+          },
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif'],
+            display: ['Cinzel Decorative', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #FDFBF7;
+      color: #2E092F;
+      overflow-x: hidden;
+    }
+
+    /* Motif Mega Mendung & Kawung Halus di Background */
+    .bg-sunda-pattern {
+      background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23D4AF37' stroke-width='0.75' stroke-opacity='0.14'%3E%3Cpath d='M30 15c10 0 15 10 25 10s15-10 25-10 15 10 25 10M30 25c10 0 15 10 25 10s15-10 25-10 15 10 25 10M10 60c12 0 18-12 30-12s18 12 30 12 18-12 30-12'/%3E%3Ccircle cx='60' cy='90' r='14'/%3E%3Ccircle cx='60' cy='90' r='6'/%3E%3Cpath d='M46 90a14 14 0 0 1 28 0M60 76a14 14 0 0 1 0 28'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* Siluet Kujang Dekoratif */
+    .kujang-watermark {
+      background-image: url("data:image/svg+xml,%3Csvg width='240' height='240' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%234A154B' fill-opacity='0.035' d='M110 20c-8 15-18 35-15 60 2 18 14 32 10 52-3 15-15 28-22 38l8 6c12-12 26-26 30-45 5-22-8-38-10-56-2-20 8-38 15-52l-16-3zm-5 42a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm4 16a4 4 0 1 1 0 8 4 4 0 0 1 0-8z'/%3E%3C/svg%3E");
+    }
+
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #AA820A 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .gold-border-glow {
+      box-shadow: 0 4px 20px -2px rgba(212, 175, 55, 0.25);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F4EFE6;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #D4AF37;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4A154B;
+    }
+
+    /* Animasi transisi tab */
+    .tab-pane {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-sunda-pattern min-h-screen flex flex-col justify-between">
+
+  <!-- HEADER UTAMA -->
+  <header class="bg-gradient-to-r from-rancage-purpleDark via-rancage-purple to-rancage-purpleDark text-white border-b-4 border-rancage-gold sticky top-0 z-40 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <!-- Logo & Identitas Sanggar -->
+      <div class="flex items-center gap-3.5 text-center sm:text-left">
+        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-rancage-purpleDark border-2 border-rancage-gold flex items-center justify-center shadow-lg shrink-0 relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-tr from-rancage-gold/20 to-transparent"></div>
+          <!-- Ikon Kujang / Mahkota Sunda SVG -->
+          <svg class="w-8 h-8 text-rancage-gold" viewBox="0 0 64 64" fill="currentColor">
+            <path d="M36 6c-4 8-9 18-7 30 1 9 7 16 5 24l5 2c5-7 11-15 13-25 2-11-4-19-5-28-1-9 3-17 7-23l-18 0zm-2 20a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zm2 9a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/>
+            <path d="M14 48c6-4 14-4 20 0-6 4-14 4-20 0z" opacity="0.7"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center justify-center sm:justify-start gap-2">
+            <h1 class="font-display text-xl sm:text-2xl font-black tracking-wider gold-gradient-text">RANCAGÉ APP</h1>
+            <span class="text-[10px] uppercase tracking-widest bg-rancage-gold/20 text-rancage-goldLight border border-rancage-gold/40 px-2 py-0.5 rounded-full font-semibold">Official</span>
+          </div>
+          <p class="text-xs sm:text-sm text-rancage-goldLight/90 font-medium tracking-wide">Sanggar Seni Rancagé Al-Batukasuri</p>
+        </div>
+      </div>
+
+      <!-- Tombol Aksi Cepat Header -->
+      <div class="flex items-center gap-2.5">
+        <button onclick="openInfoModal()" class="text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-rancage-goldLight border border-rancage-gold/40 px-3 py-2 rounded-xl transition flex items-center gap-1.5 font-medium">
+          <i class="fa-solid fa-building-columns text-rancage-gold"></i>
+          <span>Info Rekening & Kontak</span>
+        </button>
+        <button onclick="scrollToCalculator()" class="text-xs sm:text-sm bg-gradient-to-r from-rancage-gold to-rancage-goldDark hover:brightness-110 text-rancage-purpleDark font-bold px-3.5 py-2 rounded-xl shadow-md transition flex items-center gap-1.5">
+          <i class="fa-solid fa-calculator"></i>
+          <span>Cek Total (<span id="header-badge-count">0</span>)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- NAVIGATION BAR (5 MENU UTAMA) -->
+    <nav class="bg-rancage-purpleDark/90 border-t border-rancage-gold/30 overflow-x-auto">
+      <div class="max-w-7xl mx-auto px-2 sm:px-4 flex items-center justify-start md:justify-center gap-1 sm:gap-2 py-2 min-w-max">
+        <button onclick="switchTab('dangdut')" id="nav-dangdut" class="nav-btn active-nav px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 bg-rancage-gold text-rancage-purpleDark shadow">
+          <i class="fa-solid fa-music"></i>
+          <span>1. Hiburan Dangdut</span>
+        </button>
+        <button onclick="switchTab('adat')" id="nav-adat" class="nav-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 text-rancage-goldLight hover:bg-white/10">
+          <i class="fa-solid fa-masks-theater"></i>
+          <span>2. Upacara Adat Sunda</span>
+        </button>
+        <button onclick="switchTab('gabungan')" id="nav-gabungan" class="nav-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 text-rancage-goldLight hover:bg-white/10">
+          <i class="fa-solid fa-crown"></i>
+          <span>3. Paket Gabungan</span>
+        </button>
+        <button onclick="switchTab('kursus')" id="nav-kursus" class="nav-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 text-rancage-goldLight hover:bg-white/10">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span>4. Kursus Seni</span>
+        </button>
+        <button onclick="switchTab('kostum')" id="nav-kostum" class="nav-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 text-rancage-goldLight hover:bg-white/10">
+          <i class="fa-solid fa-shirt"></i>
+          <span>5. Sewa Kostum</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+  <!-- KONTEN UTAMA -->
+  <main class="max-w-7xl mx-auto w-full px-4 py-6 sm:py-8 flex-grow">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- KOLOM KIRI (7 KOLOM): MENU KATEGORI LAYANAN -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: HIBURAN DANGDUT                     -->
+        <!-- ========================================== -->
+        <section id="tab-dangdut" class="tab-pane space-y-5">
+          <div class="bg-white rounded-2xl p-5 sm:p-6 border border-rancage-gold/40 shadow-md kujang-watermark">
+            <div class="flex items-start justify-between gap-4 border-b border-rancage-gold/30 pb-4 mb-5">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-rancage-goldDark">Kategori 01</span>
+                <h2 class="text-xl sm:text-2xl font-bold text-rancage-purple mt-0.5">Paket Hiburan Dangdut</h2>
+                <p class="text-xs sm:text-sm text-gray-600 mt-1">Pilih satu paket utama atau kustomisasi personil tambahan sesuai kebutuhan acara Anda.</p>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-rancage-purple text-rancage-gold flex items-center justify-center shrink-0 text-lg shadow">
+                <i class="fa-solid fa-microphone-lines"></i>
+              </div>
+            </div>
+
+            <!-- Pilihan Paket Dangdut (Grid Cards) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="dangdut-packages-container">
+              <!-- Di-render otomatis oleh JS -->
+            </div>
+
+            <!-- Opsi Kustomisasi Dangdut (Muncul saat paket dipilih) -->
+            <div id="dangdut-customizer" class="mt-6 pt-5 border-t border-dashed border-rancage-gold/60 hidden">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-bold text-rancage-purple flex items-center gap-2">
+                  <i class="fa-solid fa-sliders text-rancage-goldDark"></i>
+                  <span>Rincian & Kustomisasi Paket Terpilih</span>
+                </h3>
+                <button onclick="clearDangdutPackage()" class="text-xs text-red-600 hover:underline font-medium">
+                  <i class="fa-solid fa-xmark"></i> Batalkan Paket
+                </button>
+              </div>
+
+              <!-- Pengaturan Harga Per Personil -->
+              <div class="bg-rancage-creamDark/80 rounded-xl p-3.5 mb-4 border border-rancage-gold/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span class="text-xs font-semibold text-rancage-purple block">Tarif Standar per Personil:</span>
+                  <span class="text-[11px] text-gray-500">Range resmi: Rp 350.000 – Rp 500.000 / personil</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <select id="dangdut-rate-selector" onchange="updateDangdutRate(this.value)" class="text-xs sm:text-sm font-bold text-rancage-purple bg-white border border-rancage-gold rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-rancage-purple">
+                    <option value="350000">Rp 350.000 / org</option>
+                    <option value="400000" selected>Rp 400.000 / org (Standar)</option>
+                    <option value="450000">Rp 450.000 / org</option>
+                    <option value="500000">Rp 500.000 / org</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Daftar Personil dalam Paket (Bisa tambah/kurang) -->
+              <div id="dangdut-personil-list" class="space-y-2.5">
+                <!-- Di-render otomatis oleh JS -->
+              </div>
+
+              <!-- Tambah Personil Ekstra di luar paket -->
+              <div class="mt-4 pt-3 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2">
+                <span class="text-xs font-semibold text-gray-600">Tambah Personil Ekstra:</span>
+                <div class="flex flex-wrap gap-1.5" id="dangdut-extra-buttons">
+                  <!-- Di-render otomatis oleh JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: UPACARA ADAT SUNDA                  -->
+        <!-- ========================================== -->
+        <section id="tab-adat" class="tab-pane hidden space-y-5">
+          <div class="bg-white rounded-2xl p-5 sm:p-6 border border-rancage-gold/40 shadow-md kujang-watermark">
+            <div class="flex items-start justify-between gap-4 border-b border-rancage-gold/30 pb-4 mb-5">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-rancage-goldDark">Kategori 02</span>
+                <h2 class="text-xl sm:text-2xl font-bold text-rancage-purple mt-0.5">Upacara Adat Sunda</h2>
+                <p class="text-xs sm:text-sm text-gray-600 mt-1">Susun formasi personil adat & layanan prosesi sakral pernikahan Sunda.</p>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-rancage-purple text-rancage-gold flex items-center justify-center shrink-0 text-lg shadow">
+                <i class="fa-solid fa-fan"></i>
+              </div>
+            </div>
+
+            <!-- Preset Cepat Upacara Adat -->
+            <div class="mb-5 bg-rancage-cream rounded-xl p-3.5 border border-rancage-gold/40">
+              <span class="text-xs font-bold text-rancage-purple block mb-2"><i class="fa-solid fa-wand-magic-sparkles text-rancage-goldDark mr-1"></i> Preset Formasi Cepat (Opsional):</span>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="applyAdatPreset('hemat')" class="text-xs bg-white hover:bg-rancage-purple hover:text-white text-rancage-purple border border-rancage-purple/30 px-3 py-1.5 rounded-lg font-medium transition">
+                  Formasi Ringkas (Lengser + Ambu + 2 Penari + Pamayung)
+                </button>
+                <button onclick="applyAdatPreset('lengkap')" class="text-xs bg-white hover:bg-rancage-purple hover:text-white text-rancage-purple border border-rancage-purple/30 px-3 py-1.5 rounded-lg font-medium transition">
+                  Formasi Lengkap (Lengser + Ambu + 4 Penari + Baksa + Pamayung)
+                </button>
+                <button onclick="resetAdatSelection()" class="text-xs text-red-600 hover:bg-red-50 px-2.5 py-1.5 rounded-lg font-medium transition">
+                  Reset Adat
+                </button>
+              </div>
+            </div>
+
+            <!-- Sub-bagian A: Personil Penari & Pemeran Adat -->
+            <div class="mb-6">
+              <h3 class="text-sm font-bold text-rancage-purple uppercase tracking-wider mb-3 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-rancage-gold"></span>
+                <span>A. Formasi Pemeran & Penari Adat</span>
+              </h3>
+              <div class="space-y-3" id="adat-personil-container">
+                <!-- Di-render oleh JS -->
+              </div>
+            </div>
+
+            <!-- Sub-bagian B: Layanan Khusus Ambu -->
+            <div>
+              <h3 class="text-sm font-bold text-rancage-purple uppercase tracking-wider mb-3 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-rancage-gold"></span>
+                <span>B. Layanan Prosesi Khusus Ambu</span>
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="adat-ambu-services-container">
+                <!-- Di-render oleh JS -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: PAKET GABUNGAN (ADAT + DANGDUT)     -->
+        <!-- ========================================== -->
+        <section id="tab-gabungan" class="tab-pane hidden space-y-5">
+          <div class="bg-white rounded-2xl p-5 sm:p-6 border border-rancage-gold/40 shadow-md kujang-watermark">
+            <div class="flex items-start justify-between gap-4 border-b border-rancage-gold/30 pb-4 mb-5">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-rancage-goldDark">Kategori 03 • Best Value</span>
+                <h2 class="text-xl sm:text-2xl font-bold text-rancage-purple mt-0.5">Paket Gabungan (Adat + Dangdut)</h2>
+                <p class="text-xs sm:text-sm text-gray-600 mt-1">Solusi lengkap satu hari penuh: Prosesi Upacara Adat Sunda dilanjutkan Hiburan Dangdut meriah dengan harga spesial.</p>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-rancage-gold to-rancage-goldDark text-rancage-purpleDark flex items-center justify-center shrink-0 text-lg shadow">
+                <i class="fa-solid fa-crown"></i>
+              </div>
+            </div>
+
+            <!-- Pilihan Paket Bundling -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <!-- Paket Gabungan Silver -->
+              <div class="border-2 border-rancage-gold/40 hover:border-rancage-purple rounded-2xl p-4 bg-rancage-cream/50 transition flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold bg-rancage-purple/10 text-rancage-purple px-2.5 py-1 rounded-full">Bundling Hemat</span>
+                    <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Hemat Rp 300.000</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-rancage-purple">Paket Sawargi (Adat Ringkas + Dangdut Semi)</h3>
+                  <ul class="text-xs text-gray-600 space-y-1.5 mt-3 mb-4">
+                    <li><i class="fa-solid fa-check text-rancage-goldDark mr-1.5"></i>Upacara Adat: Ki Lengser, Ambu, 2 Penari (Mahir), Pamayung</li>
+                    <li><i class="fa-solid fa-check text-rancage-goldDark mr-1.5"></i>Layanan Ambu: Sawér & Sungkem</li>
+                    <li><i class="fa-solid fa-check text-rancage-goldDark mr-1.5"></i>Hiburan: Dangdut Semi (7 Personil)</li>
+                  </ul>
+                </div>
+                <div class="pt-3 border-t border-rancage-gold/30 flex items-center justify-between">
+                  <div>
+                    <span class="text-[11px] text-gray-400 line-through block">Rp 6.000.000</span>
+                    <span class="text-base font-extrabold text-rancage-purple">Rp 5.700.000</span>
+                  </div>
+                  <button onclick="applyComboBundle('sawargi')" class="bg-rancage-purple hover:bg-rancage-purpleLight text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition shadow">
+                    Pilih Bundling
+                  </button>
+                </div>
+              </div>
+
+              <!-- Paket Gabungan Gold -->
+              <div class="border-2 border-rancage-gold rounded-2xl p-4 bg-gradient-to-b from-rancage-purpleDark to-rancage-purple text-white transition flex flex-col justify-between shadow-lg relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-20 h-20 bg-rancage-gold/20 rounded-full blur-xl"></div>
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold bg-rancage-gold text-rancage-purpleDark px-2.5 py-1 rounded-full">Terpopuler • VIP</span>
+                    <span class="text-xs font-bold text-rancage-goldLight bg-white/10 px-2 py-0.5 rounded-full">Hemat Rp 500.000</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-rancage-goldLight">Paket Kancana (Adat Lengkap + Dangdut Full)</h3>
+                  <ul class="text-xs text-gray-200 space-y-1.5 mt-3 mb-4">
+                    <li><i class="fa-solid fa-check text-rancage-gold mr-1.5"></i>Upacara Adat: Ki Lengser, Ambu, 4 Penari (Prof), 2 Baksa, Pamayung</li>
+                    <li><i class="fa-solid fa-check text-rancage-gold mr-1.5"></i>Layanan Ambu: Sawér, Sungkem & MC Wedding</li>
+                    <li><i class="fa-solid fa-check text-rancage-gold mr-1.5"></i>Hiburan: Dangdut Full (10 Personil)</li>
+                  </ul>
+                </div>
+                <div class="pt-3 border-t border-rancage-gold/30 flex items-center justify-between">
+                  <div>
+                    <span class="text-[11px] text-gray-300 line-through block">Rp 9.450.000</span>
+                    <span class="text-base font-extrabold text-rancage-gold">Rp 8.950.000</span>
+                  </div>
+                  <button onclick="applyComboBundle('kancana')" class="bg-rancage-gold hover:brightness-110 text-rancage-purpleDark text-xs font-bold px-3.5 py-2 rounded-xl transition shadow">
+                    Pilih Bundling
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kustomisasi Gabungan Bebas -->
+            <div class="bg-rancage-creamDark rounded-xl p-4 border border-rancage-gold/40">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h4 class="text-sm font-bold text-rancage-purple">Ingin Meracik Paket Gabungan Sendiri?</h4>
+                  <p class="text-xs text-gray-600 mt-0.5">Setiap kombinasi <b>Hiburan Dangdut + Upacara Adat</b> otomatis mendapatkan potongan diskon gabungan sebesar <b>Rp 250.000</b> di kalkulator!</p>
+                </div>
+                <div class="flex gap-2 shrink-0">
+                  <button onclick="switchTab('dangdut')" class="text-xs bg-white border border-rancage-purple text-rancage-purple hover:bg-rancage-purple hover:text-white px-3 py-2 rounded-lg font-semibold transition">
+                    + Atur Dangdut
+                  </button>
+                  <button onclick="switchTab('adat')" class="text-xs bg-white border border-rancage-purple text-rancage-purple hover:bg-rancage-purple hover:text-white px-3 py-2 rounded-lg font-semibold transition">
+                    + Atur Adat
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: KURSUS SENI                         -->
+        <!-- ========================================== -->
+        <section id="tab-kursus" class="tab-pane hidden space-y-5">
+          <div class="bg-white rounded-2xl p-5 sm:p-6 border border-rancage-gold/40 shadow-md kujang-watermark">
+            <div class="flex items-start justify-between gap-4 border-b border-rancage-gold/30 pb-4 mb-5">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-rancage-goldDark">Kategori 04</span>
+                <h2 class="text-xl sm:text-2xl font-bold text-rancage-purple mt-0.5">Kursus Seni & Pelatihan Sanggar</h2>
+                <p class="text-xs sm:text-sm text-gray-600 mt-1">Pelatihan seni tari tradisional Sunda, vokal/sinden, dan alat musik tradisional untuk anak-anak hingga dewasa.</p>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-rancage-purple text-rancage-gold flex items-center justify-center shrink-0 text-lg shadow">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="kursus-container">
+              <!-- Di-render oleh JS -->
+            </div>
+
+            <div class="mt-5 bg-rancage-cream rounded-xl p-4 border border-rancage-gold/30 text-xs text-gray-700 space-y-1.5">
+              <p class="font-bold text-rancage-purple"><i class="fa-solid fa-circle-info text-rancage-goldDark mr-1.5"></i>Informasi Jadwal Latihan:</p>
+              <p>• Latihan rutin dilaksanakan di Sanggar Seni Rancagé Al-Batukasuri (2x seminggu untuk paket bulanan).</p>
+              <p>• Tersedia kelas Privat maupun Reguler. Biaya dapat dimasukkan ke kalkulator untuk pendaftaran awal.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 5: SEWA KOSTUM                         -->
+        <!-- ========================================== -->
+        <section id="tab-kostum" class="tab-pane hidden space-y-5">
+          <div class="bg-white rounded-2xl p-5 sm:p-6 border border-rancage-gold/40 shadow-md kujang-watermark">
+            <div class="flex items-start justify-between gap-4 border-b border-rancage-gold/30 pb-4 mb-5">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-rancage-goldDark">Kategori 05</span>
+                <h2 class="text-xl sm:text-2xl font-bold text-rancage-purple mt-0.5">Penyewaan Kostum Tari & Adat</h2>
+                <p class="text-xs sm:text-sm text-gray-600 mt-1">Koleksi busana tari tradisional Sunda & nusantara terawat, lengkap dengan aksesoris kepala dan selendang.</p>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-rancage-purple text-rancage-gold flex items-center justify-center shrink-0 text-lg shadow">
+                <i class="fa-solid fa-shirt"></i>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5" id="kostum-container">
+              <!-- Di-render oleh JS -->
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- KOLOM KANAN (5 KOLOM): KALKULATOR ESTIMASI & BOOKING WA  -->
+      <!-- ======================================================== -->
+      <aside id="calculator-panel" class="lg:col-span-5 sticky top-28 space-y-5">
+        <div class="bg-white rounded-2xl border-2 border-rancage-gold gold-border-glow overflow-hidden">
+          <!-- Header Kalkulator -->
+          <div class="bg-gradient-to-r from-rancage-purpleDark to-rancage-purple px-5 py-4 text-white flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-rancage-gold/20 border border-rancage-gold/50 flex items-center justify-center text-rancage-gold">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-base leading-tight">Estimasi Biaya Layanan</h3>
+                <p class="text-[11px] text-rancage-goldLight">Rincian otomatis & transparan</p>
+              </div>
+            </div>
+            <button onclick="resetAllSelections()" class="text-xs bg-white/10 hover:bg-red-500/80 text-white px-2.5 py-1.5 rounded-lg transition" title="Hapus Semua Pilihan">
+              <i class="fa-solid fa-trash-can mr-1"></i>Reset
+            </button>
+          </div>
+
+          <!-- Daftar Item Terpilih -->
+          <div class="p-5">
+            <div id="cart-items-container" class="space-y-3 max-h-[340px] overflow-y-auto pr-1">
+              <!-- State Kosong -->
+              <div class="text-center py-8 text-gray-400">
+                <i class="fa-solid fa-basket-shopping text-3xl mb-2 text-rancage-gold/50"></i>
+                <p class="text-sm font-medium text-gray-500">Belum ada layanan yang dipilih</p>
+                <p class="text-xs mt-1">Silakan pilih paket atau layanan di sebelah kiri untuk melihat estimasi biaya.</p>
+              </div>
+            </div>
+
+            <!-- Ringkasan Diskon & Total -->
+            <div id="cart-summary-box" class="mt-4 pt-4 border-t-2 border-dashed border-rancage-gold/40 hidden space-y-2">
+              <div class="flex justify-between text-xs text-gray-600">
+                <span>Subtotal Layanan</span>
+                <span id="summary-subtotal" class="font-semibold">Rp 0</span>
+              </div>
+              <div id="summary-discount-row" class="flex justify-between text-xs text-emerald-700 font-semibold hidden">
+                <span><i class="fa-solid fa-tag mr-1"></i>Diskon Paket Gabungan</span>
+                <span id="summary-discount">- Rp 0</span>
+              </div>
+              <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                <span class="text-sm font-bold text-rancage-purple">TOTAL ESTIMASI</span>
+                <span id="summary-total" class="text-xl sm:text-2xl font-extrabold text-rancage-purple">Rp 0</span>
+              </div>
+              <p class="text-[11px] text-gray-500 italic">*Harga belum termasuk biaya transportasi luar kota (jika ada).</p>
+            </div>
+
+            <!-- Form Data Pemesan (Untuk WhatsApp) -->
+            <div class="mt-5 pt-4 border-t border-gray-200 space-y-3">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-rancage-purple">Data Pemesan / Jadwal Acara</h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label class="text-[11px] font-medium text-gray-600 block mb-1">Nama Pemesan *</label>
+                  <input type="text" id="cust-name" placeholder="Contoh: Ibu Siti / Kang Dedi" class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-rancage-purple" />
+                </div>
+                <div>
+                  <label class="text-[11px] font-medium text-gray-600 block mb-1">Tanggal Acara *</label>
+                  <input type="date" id="cust-date" class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-rancage-purple" />
+                </div>
+              </div>
+              <div>
+                <label class="text-[11px] font-medium text-gray-600 block mb-1">Lokasi / Alamat Acara</label>
+                <input type="text" id="cust-location" placeholder="Contoh: Gedung Serbaguna / Kp. Batukasuri..." class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-rancage-purple" />
+              </div>
+              <div>
+                <label class="text-[11px] font-medium text-gray-600 block mb-1">Catatan Tambahan (Opsional)</label>
+                <textarea id="cust-notes" rows="2" placeholder="Request lagu, warna kostum, atau jam mulai acara..." class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-rancage-purple"></textarea>
+              </div>
+
+              <!-- Tombol Kirim ke WhatsApp -->
+              <button onclick="sendToWhatsApp()" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
+                <i class="fa-brands fa-whatsapp text-lg"></i>
+                <span>Pesan & Konsultasi via WhatsApp</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kartu Mini Rekening Pembayaran -->
+        <div class="bg-rancage-purpleDark text-white rounded-2xl p-4 border border-rancage-gold/50 shadow-md">
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-xs font-bold text-rancage-gold uppercase tracking-wider"><i class="fa-solid fa-wallet mr-1.5"></i>Rekening Resmi Sanggar</span>
+            <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded text-rancage-goldLight">a.n. Yayan Hadiyanto</span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+              <div>
+                <span class="font-bold text-sky-400">DANA</span>
+                <span class="block text-gray-200 font-mono">085860755873</span>
+              </div>
+              <button onclick="copyText('085860755873', 'Nomor DANA')" class="text-[11px] bg-rancage-gold/20 hover:bg-rancage-gold hover:text-rancage-purpleDark text-rancage-gold px-2.5 py-1 rounded transition font-medium">
+                <i class="fa-regular fa-copy mr-1"></i>Salin
+              </button>
+            </div>
+            <div class="flex items-center justify-between bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+              <div>
+                <span class="font-bold text-blue-400">Bank BCA</span>
+                <span class="block text-gray-200 font-mono">4372692549</span>
+              </div>
+              <button onclick="copyText('4372692549', 'Rekening BCA')" class="text-[11px] bg-rancage-gold/20 hover:bg-rancage-gold hover:text-rancage-purpleDark text-rancage-gold px-2.5 py-1 rounded transition font-medium">
+                <i class="fa-regular fa-copy mr-1"></i>Salin
+              </button>
+            </div>
+            <div class="flex items-center justify-between bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+              <div>
+                <span class="font-bold text-amber-400">Bank BJB</span>
+                <span class="block text-gray-200 font-mono">0017816117100</span>
+              </div>
+              <button onclick="copyText('0017816117100', 'Rekening BJB')" class="text-[11px] bg-rancage-gold/20 hover:bg-rancage-gold hover:text-rancage-purpleDark text-rancage-gold px-2.5 py-1 rounded transition font-medium">
+                <i class="fa-regular fa-copy mr-1"></i>Salin
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+  <!-- FOOTER -->
+  <footer class="bg-rancage-purpleDark text-rancage-goldLight/80 border-t-2 border-rancage-gold/40 py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+      <div class="text-center sm:text-left">
+        <p class="font-display font-bold text-rancage-gold text-sm">SANGGAR SENI RANCAGÉ AL-BATUKASURI</p>
+        <p class="mt-1 text-gray-300">Melestarikan Budaya Sunda dengan Karya Rancagé & Profesional.</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="https://wa.me/6285860755873" target="_blank" class="hover:text-rancage-gold transition flex items-center gap-1.5">
+          <i class="fa-brands fa-whatsapp text-emerald-400 text-base"></i>
+          <span>0858-6075-5873 (Admin Sanggar)</span>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL INFO REKENING & KONTAK -->
+  <div id="info-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full border-2 border-rancage-gold overflow-hidden shadow-2xl animate-fadeIn">
+      <div class="bg-rancage-purple px-5 py-4 text-white flex items-center justify-between">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-rancage-gold"></i>
+          <span>Informasi Pembayaran & Kontak</span>
+        </h3>
+        <button onclick="closeInfoModal()" class="text-white/80 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4 text-xs sm:text-sm">
+        <div class="bg-rancage-cream p-3.5 rounded-xl border border-rancage-gold/40">
+          <p class="font-bold text-rancage-purple mb-1">Ketentuan Booking & DP:</p>
+          <ul class="list-disc list-inside text-gray-600 space-y-1 text-xs">
+            <li>Kunci tanggal acara (Booking Date) minimal DP 30% dari total estimasi.</li>
+            <li>Pelunasan dilakukan maksimal H-1 atau di lokasi sebelum acara dimulai.</li>
+            <li>Konfirmasi bukti transfer wajib dikirimkan ke WhatsApp Admin.</li>
+          </ul>
+        </div>
+
+        <div class="space-y-2">
+          <p class="font-bold text-rancage-purple text-xs uppercase tracking-wider">Rekening Tujuan (a.n. Yayan Hadiyanto):</p>
+          <div class="p-3 rounded-xl border border-gray-200 flex items-center justify-between">
+            <div>
+              <span class="font-bold text-sky-600 block">DANA (E-Wallet)</span>
+              <span class="font-mono text-gray-800">085860755873</span>
+            </div>
+            <button onclick="copyText('085860755873', 'Nomor DANA')" class="bg-rancage-purple text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-rancage-purpleLight">Salin</button>
+          </div>
+          <div class="p-3 rounded-xl border border-gray-200 flex items-center justify-between">
+            <div>
+              <span class="font-bold text-blue-700 block">Bank BCA</span>
+              <span class="font-mono text-gray-800">4372692549</span>
+            </div>
+            <button onclick="copyText('4372692549', 'Rekening BCA')" class="bg-rancage-purple text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-rancage-purpleLight">Salin</button>
+          </div>
+          <div class="p-3 rounded-xl border border-gray-200 flex items-center justify-between">
+            <div>
+              <span class="font-bold text-amber-600 block">Bank BJB</span>
+              <span class="font-mono text-gray-800">0017816117100</span>
+            </div>
+            <button onclick="copyText('0017816117100', 'Rekening BJB')" class="bg-rancage-purple text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-rancage-purpleLight">Salin</button>
+          </div>
+        </div>
+
+        <button onclick="closeInfoModal()" class="w-full bg-rancage-gold text-rancage-purpleDark font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider">
+          Tutup Informasi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-rancage-purpleDark text-white border border-rancage-gold px-4 py-3 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-2.5 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <i class="fa-solid fa-circle-check text-rancage-gold text-base"></i>
+    <span id="toast-message">Berhasil disalin!</span>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- JAVASCRIPT DATA & LOGIKA APLIKASI                         -->
+  <!-- ========================================================= -->
+  <script>
+    // 1. DATA MASTER LAYANAN SANGGAR
+    const DATA_DANGDUT_PACKAGES = [
+      {
+        id: 'orgen',
+        name: 'Orgen Tunggal',
+        personilCount: 3,
+        defaultPrice: 1200000,
+        desc: 'Cocok untuk acara syukuran, arisan, atau hiburan keluarga intim.',
+        roster: ['Player Keyboard', 'Penyanyi 1', 'Penyanyi 2']
+      },
+      {
+        id: 'semi',
+        name: 'Dangdut Semi',
+        personilCount: 7,
+        defaultPrice: 2800000,
+        desc: 'Formasi menengah dengan kendang & gitar/suling yang lebih hidup.',
+        roster: ['Player Keyboard', 'Kendang / Ketipung', 'Gitar / Suling', 'MC Dangdut', 'Penyanyi 1', 'Penyanyi 2', 'Penyanyi 3']
+      },
+      {
+        id: 'full',
+        name: 'Dangdut Full',
+        personilCount: 10,
+        defaultPrice: 4000000,
+        desc: 'Formasi lengkap panggung hajatan besar dengan instrumen full band.',
+        roster: ['Keyboard 1', 'Keyboard 2 / String', 'Kendang Rampak', 'Gitar Melody', 'Bass', 'Suling', 'Tamborin / MC', 'Penyanyi 1', 'Penyanyi 2', 'Penyanyi 3']
+      },
+      {
+        id: 'akustik',
+        name: 'Paket Lainnya (Akustik / Band)',
+        personilCount: 5,
+        defaultPrice: 2000000,
+        desc: 'Hiburan musik akustik / pop Sunda / religi untuk wedding modern.',
+        roster: ['Vokalis Utama', 'Gitaris Akustik', 'Bassist', 'Cajon / Perkusi', 'Keyboardist']
+      }
+    ];
+
+    const EXTRA_DANGDUT_ROLES = [
+      'Penyanyi Tambahan', 'Pemain Suling', 'Pemain Gitar', 'MC Acara', 'Penari Latar'
+    ];
+
+    const DATA_ADAT_PERSONIL = [
+      {
+        id: 'lengser',
+        name: 'Ki Lengser',
+        desc: 'Tokoh sesepuh jenaka & bijaksana penjemput pengantin.',
+        hasTier: false,
+        price: 600000,
+        max: 1
+      },
+      {
+        id: 'ambu',
+        name: 'Ambu (Pendamping Lengser)',
+        desc: 'Sosok ibu pengayom yang mendampingi Ki Lengser & prosesi.',
+        hasTier: false,
+        price: 500000,
+        max: 1
+      },
+      {
+        id: 'penari_putri',
+        name: 'Penari Perempuan (Merak / Badaya)',
+        desc: 'Penari penyambut kirab pengantin dengan gerak anggun.',
+        hasTier: true,
+        tiers: {
+          cakap: { label: 'Cakap (Pemula Terlatih)', price: 300000 },
+          mahir: { label: 'Mahir (Berpengalaman)', price: 400000 },
+          profesional: { label: 'Profesional (Utama)', price: 500000 }
+        },
+        max: 8
+      },
+      {
+        id: 'penari_baksa',
+        name: 'Penari Baksa (Penari Pria / Satria)',
+        desc: 'Penari gagah pembawa umbul-umbul atau pengawal kirab.',
+        hasTier: true,
+        tiers: {
+          cakap: { label: 'Cakap', price: 350000 },
+          mahir: { label: 'Mahir', price: 450000 },
+          profesional: { label: 'Profesional', price: 550000 }
+        },
+        max: 6
+      },
+      {
+        id: 'pamayung',
+        name: 'Pamayung (Pembawa Payung Agung)',
+        desc: 'Pembawa payung kebesaran pengantin selama prosesi mapag.',
+        hasTier: false,
+        price: 300000,
+        max: 2
+      },
+      {
+        id: 'rama_shinta',
+        name: 'Rama & Shinta (Sepasang)',
+        desc: 'Tarian simbolis kasih sayang abadi pengantin Sunda.',
+        hasTier: true,
+        tiers: {
+          cakap: { label: 'Cakap (Sepasang)', price: 700000 },
+          mahir: { label: 'Mahir (Sepasang)', price: 900000 },
+          profesional: { label: 'Profesional (Sepasang)', price: 1200000 }
+        },
+        max: 1
+      }
+    ];
+
+    const DATA_AMBU_SERVICES = [
+      { id: 'sawer', name: 'Prosesi Sawér Pangantén', desc: 'Tembang wejangan & tabur beras kunyit/uang.', price: 350000 },
+      { id: 'sungkem', name: 'Pemandu Sungkeman', desc: 'Narasi haru & tuntunan sungkem kepada orang tua.', price: 300000 },
+      { id: 'mc_wedding', name: 'MC Wedding Adat Sunda', desc: 'Pembawa acara akad & resepsi bilingual (Sunda-Indo).', price: 750000 },
+      { id: 'bantayan', name: 'Prosesi Bantayan / Huap Lingkung', desc: 'Simbolis suapan terakhir orang tua & buka pintu.', price: 300000 },
+      { id: 'siraman', name: 'Prosesi Siraman & Ngeuyeuk Seureuh', desc: 'Upacara pra-nikah lengkap dengan narasi adat.', price: 850000 }
+    ];
+
+    const DATA_KURSUS = [
+      {
+        id: 'kursus_tari_pertemuan',
+        title: 'Kursus Tari Sunda (Per Pertemuan)',
+        category: 'Tari Jaipong & Klasik',
+        price: 50000,
+        unit: 'pertemuan',
+        desc: 'Bayar per kedatangan latihan (durasi 90 menit/sesi).'
+      },
+      {
+        id: 'kursus_tari_bulanan',
+        title: 'Kursus Tari Sunda (Paket Bulanan)',
+        category: '8x Pertemuan / Bulan',
+        price: 300000,
+        unit: 'bulan',
+        desc: 'Lebih hemat! 8 kali pertemuan dalam sebulan + materi koreografi.'
+      },
+      {
+        id: 'kursus_vokal_bulanan',
+        title: 'Kursus Vokal / Kawih & Sinden',
+        category: '8x Pertemuan / Bulan',
+        price: 350000,
+        unit: 'bulan',
+        desc: 'Olah vokal, cengkok Sunda, dan teknik pernapasan panggung.'
+      },
+      {
+        id: 'kursus_musik_bulanan',
+        title: 'Kursus Kendang & Kacapi Suling',
+        category: '8x Pertemuan / Bulan',
+        price: 350000,
+        unit: 'bulan',
+        desc: 'Pelatihan dasar hingga mahir memainkan alat musik tradisional Sunda.'
+      }
+    ];
+
+    const DATA_KOSTUM = [
+      {
+        id: 'kostum_tari_putri',
+        name: 'Set Kostum Tari Perempuan (Merak / Jaipong)',
+        price: 150000,
+        include: 'Kebaya/Apok, Sinjang, Sampur (Selendang), Siger/Mahkota & Aksesoris.',
+        badge: 'Favorit',
+        icon: 'fa-person-dress'
+      },
+      {
+        id: 'kostum_tari_putra',
+        name: 'Set Kostum Tari Laki-Laki (Satria / Baksa)',
+        price: 150000,
+        include: 'Baju Takwa/Rompi, Celana Pangsi/Sontog, Kain Dodot, Iket/Mahkota.',
+        badge: 'Lengkap',
+        icon: 'fa-person'
+      },
+      {
+        id: 'kostum_lengser',
+        name: 'Set Kostum Ki Lengser & Ambu (Sepasang)',
+        price: 350000,
+        include: 'Baju Kampret & Totopong Lengser + Kebaya & Sinjang khas Ambu.',
+        badge: 'Sepasang',
+        icon: 'fa-user-group'
+      },
+      {
+        id: 'kostum_beskap_adat',
+        name: 'Beskap / Kebaya Penerima Tamu & Pamayung',
+        price: 125000,
+        include: 'Beskap Sunda + Bendo atau Kebaya + Kain Jarik siap pakai.',
+        badge: 'Rapi',
+        icon: 'fa-vest-patches'
+      }
+    ];
+
+    // 2. STATE APLIKASI
+    let state = {
+      dangdut: {
+        packageId: null,
+        ratePerPerson: 400000,
+        roster: [] // array of strings
+      },
+      adatPersonil: {
+        // id: { qty: 0, tier: 'mahir' }
+      },
+      ambuServices: {
+        // id: boolean
+      },
+      kursus: {
+        // id: qty
+      },
+      kostum: {
+        // id: qty
+      },
+      comboDiscountOverride: 0
+    };
+
+    // Format Rupiah
+    function formatRupiah(angka) {
+      return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    // 3. INISIALISASI RENDER UI
+    function initApp() {
+      renderDangdutPackages();
+      renderAdatSection();
+      renderKursusSection();
+      renderKostumSection();
+      updateCalculator();
+    }
+
+    // NAVIGASI TAB
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-rancage-gold', 'text-rancage-purpleDark', 'shadow');
+        btn.classList.add('text-rancage-goldLight', 'hover:bg-white/10');
+      });
+
+      const activeBtn = document.getElementById('nav-' + tabName);
+      activeBtn.classList.remove('text-rancage-goldLight', 'hover:bg-white/10');
+      activeBtn.classList.add('bg-rancage-gold', 'text-rancage-purpleDark', 'shadow');
+    }
+
+    // RENDER TAB 1: DANGDUT
+    function renderDangdutPackages() {
+      const container = document.getElementById('dangdut-packages-container');
+      container.innerHTML = DATA_DANGDUT_PACKAGES.map(pkg => {
+        const isSelected = state.dangdut.packageId === pkg.id;
+        return `
+          <div onclick="selectDangdutPackage('${pkg.id}')" class="cursor-pointer rounded-2xl p-4 border-2 transition flex flex-col justify-between ${isSelected ? 'border-rancage-purple bg-rancage-purple/5 shadow-md' : 'border-gray-200 hover:border-rancage-gold bg-white'}">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-1.5">
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${isSelected ? 'bg-rancage-purple text-white' : 'bg-rancage-creamDark text-rancage-purple'}">
+                  ${pkg.personilCount} Personil
+                </span>
+                ${isSelected ? '<i class="fa-solid fa-circle-check text-rancage-purple text-lg"></i>' : '<i class="fa-regular fa-circle text-gray-300 text-lg"></i>'}
+              </div>
+              <h3 class="font-bold text-base text-rancage-purple">${pkg.name}</h3>
+              <p class="text-xs text-gray-600 mt-1 leading-relaxed">${pkg.desc}</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+              <span class="text-xs text-gray-500">Mulai dari</span>
+              <span class="font-extrabold text-sm text-rancage-purple">${formatRupiah(pkg.personilCount * state.dangdut.ratePerPerson)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Render tombol ekstra
+      const extraContainer = document.getElementById('dangdut-extra-buttons');
+      extraContainer.innerHTML = EXTRA_DANGDUT_ROLES.map(role => `
+        <button onclick="addDangdutPersonil('${role}')" class="text-[11px] bg-rancage-cream hover:bg-rancage-purple hover:text-white text-rancage-purple border border-rancage-gold/50 px-2.5 py-1 rounded-lg transition font-medium">
+          + ${role}
+        </button>
+      `).join('');
+    }
+
+    function selectDangdutPackage(pkgId) {
+      const pkg = DATA_DANGDUT_PACKAGES.find(p => p.id === pkgId);
+      if (!pkg) return;
+      state.dangdut.packageId = pkgId;
+      state.dangdut.roster = [...pkg.roster];
+      state.comboDiscountOverride = 0;
+
+      renderDangdutPackages();
+      renderDangdutRoster();
+      document.getElementById('dangdut-customizer').classList.remove('hidden');
+      updateCalculator();
+    }
+
+    function clearDangdutPackage() {
+      state.dangdut.packageId = null;
+      state.dangdut.roster = [];
+      state.comboDiscountOverride = 0;
+      document.getElementById('dangdut-customizer').classList.add('hidden');
+      renderDangdutPackages();
+      updateCalculator();
+    }
+
+    function updateDangdutRate(newRate) {
+      state.dangdut.ratePerPerson = parseInt(newRate, 10);
+      renderDangdutPackages();
+      renderDangdutRoster();
+      updateCalculator();
+    }
+
+    function renderDangdutRoster() {
+      const listEl = document.getElementById('dangdut-personil-list');
+      listEl.innerHTML = state.dangdut.roster.map((role, idx) => `
+        <div class="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-rancage-purple/10 text-rancage-purple font-bold flex items-center justify-center text-[10px]">${idx + 1}</span>
+            <span class="font-medium text-gray-800">${role}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-gray-500 font-medium">${formatRupiah(state.dangdut.ratePerPerson)}</span>
+            ${state.dangdut.roster.length > 1 ? `
+              <button onclick="removeDangdutPersonil(${idx})" class="text-red-500 hover:text-red-700" title="Hapus personil ini">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addDangdutPersonil(roleName) {
+      state.dangdut.roster.push(roleName);
+      renderDangdutRoster();
+      updateCalculator();
+      showToast(`Ditambahkan: ${roleName}`);
+    }
+
+    function removeDangdutPersonil(index) {
+      state.dangdut.roster.splice(index, 1);
+      renderDangdutRoster();
+      updateCalculator();
+    }
+
+    // RENDER TAB 2: UPACARA ADAT
+    function renderAdatSection() {
+      const personilContainer = document.getElementById('adat-personil-container');
+      personilContainer.innerHTML = DATA_ADAT_PERSONIL.map(item => {
+        if (!state.adatPersonil[item.id]) {
+          state.adatPersonil[item.id] = { qty: 0, tier: 'mahir' };
+        }
+        const current = state.adatPersonil[item.id];
+        const unitPrice = item.hasTier ? item.tiers[current.tier].price : item.price;
+
+        return `
+          <div class="p-3.5 rounded-xl border ${current.qty > 0 ? 'border-rancage-purple bg-rancage-purple/5' : 'border-gray-200 bg-white'} transition">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex-grow">
+                <div class="flex items-center gap-2">
+                  <h4 class="font-bold text-sm text-rancage-purple">${item.name}</h4>
+                  <span class="text-xs font-semibold text-rancage-goldDark">${formatRupiah(unitPrice)}</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-0.5">${item.desc}</p>
+
+                ${item.hasTier ? `
+                  <div class="mt-2 flex items-center gap-2">
+                    <span class="text-[11px] font-medium text-gray-600">Tingkat Keahlian:</span>
+                    <select onchange="changeAdatTier('${item.id}', this.value)" class="text-xs border border-rancage-gold/60 rounded-lg px-2 py-1 bg-white text-rancage-purple font-medium focus:outline-none">
+                      <option value="cakap" ${current.tier === 'cakap' ? 'selected' : ''}>Cakap (${formatRupiah(item.tiers.cakap.price)})</option>
+                      <option value="mahir" ${current.tier === 'mahir' ? 'selected' : ''}>Mahir (${formatRupiah(item.tiers.mahir.price)})</option>
+                      <option value="profesional" ${current.tier === 'profesional' ? 'selected' : ''}>Profesional (${formatRupiah(item.tiers.profesional.price)})</option>
+                    </select>
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Stepper Jumlah -->
+              <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                <button onclick="updateAdatQty('${item.id}', -1)" class="w-8 h-8 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-rancage-purple font-bold flex items-center justify-center">
+                  <i class="fa-solid fa-minus text-xs"></i>
+                </button>
+                <span class="w-8 text-center font-bold text-sm text-rancage-purple">${current.qty}</span>
+                <button onclick="updateAdatQty('${item.id}', 1)" class="w-8 h-8 rounded-lg bg-rancage-purple hover:bg-rancage-purpleLight text-white font-bold flex items-center justify-center">
+                  <i class="fa-solid fa-plus text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Render Layanan Khusus Ambu
+      const ambuContainer = document.getElementById('adat-ambu-services-container');
+      ambuContainer.innerHTML = DATA_AMBU_SERVICES.map(srv => {
+        const checked = !!state.ambuServices[srv.id];
+        return `
+          <label class="cursor-pointer p-3.5 rounded-xl border-2 transition flex items-start gap-3 ${checked ? 'border-rancage-purple bg-rancage-purple/5' : 'border-gray-200 hover:border-rancage-gold bg-white'}">
+            <input type="checkbox" onchange="toggleAmbuService('${srv.id}')" ${checked ? 'checked' : ''} class="mt-1 accent-rancage-purple w-4 h-4 rounded" />
+            <div class="flex-grow">
+              <div class="flex items-center justify-between gap-1">
+                <span class="font-bold text-xs sm:text-sm text-rancage-purple">${srv.name}</span>
+              </div>
+              <p class="text-[11px] text-gray-500 mt-0.5">${srv.desc}</p>
+              <span class="inline-block mt-1.5 text-xs font-bold text-rancage-goldDark">${formatRupiah(srv.price)}</span>
+            </div>
+          </label>
+        `;
+      }).join('');
+    }
+
+    function updateAdatQty(id, delta) {
+      const item = DATA_ADAT_PERSONIL.find(i => i.id === id);
+      if (!item) return;
+      const nextQty = Math.max(0, Math.min(item.max, (state.adatPersonil[id].qty || 0) + delta));
+      state.adatPersonil[id].qty = nextQty;
+      state.comboDiscountOverride = 0;
+      renderAdatSection();
+      updateCalculator();
+    }
+
+    function changeAdatTier(id, tier) {
+      state.adatPersonil[id].tier = tier;
+      renderAdatSection();
+      updateCalculator();
+    }
+
+    function toggleAmbuService(id) {
+      state.ambuServices[id] = !state.ambuServices[id];
+      state.comboDiscountOverride = 0;
+      renderAdatSection();
+      updateCalculator();
+    }
+
+    function applyAdatPreset(type) {
+      resetAdatSelection(false);
+      if (type === 'hemat') {
+        state.adatPersonil['lengser'] = { qty: 1, tier: 'mahir' };
+        state.adatPersonil['ambu'] = { qty: 1, tier: 'mahir' };
+        state.adatPersonil['penari_putri'] = { qty: 2, tier: 'mahir' };
+        state.adatPersonil['pamayung'] = { qty: 1, tier: 'mahir' };
+        state.ambuServices['sawer'] = true;
+        state.ambuServices['sungkem'] = true;
+        showToast('Formasi Adat Ringkas diterapkan!');
+      } else if (type === 'lengkap') {
+        state.adatPersonil['lengser'] = { qty: 1, tier: 'profesional' };
+        state.adatPersonil['ambu'] = { qty: 1, tier: 'profesional' };
+        state.adatPersonil['penari_putri'] = { qty: 4, tier: 'profesional' };
+        state.adatPersonil['penari_baksa'] = { qty: 2, tier: 'profesional' };
+        state.adatPersonil['pamayung'] = { qty: 1, tier: 'profesional' };
+        state.ambuServices['sawer'] = true;
+        state.ambuServices['sungkem'] = true;
+        state.ambuServices['mc_wedding'] = true;
+        showToast('Formasi Adat Lengkap diterapkan!');
+      }
+      renderAdatSection();
+      updateCalculator();
+    }
+
+    function resetAdatSelection(notify = true) {
+      DATA_ADAT_PERSONIL.forEach(i => {
+        state.adatPersonil[i.id] = { qty: 0, tier: 'mahir' };
+      });
+      state.ambuServices = {};
+      state.comboDiscountOverride = 0;
+      renderAdatSection();
+      updateCalculator();
+      if (notify) showToast('Pilihan Upacara Adat di-reset.');
+    }
+
+    // APPLY BUNDLING PAKET GABUNGAN (TAB 3)
+    function applyComboBundle(bundleType) {
+      if (bundleType === 'sawargi') {
+        // Dangdut Semi (7 org * 400rb = 2.8jt) + Adat Ringkas (600+500+800+300 + sawer 350 + sungkem 300 = 2.85jt) -> Total 5.65jt / 6jt -> Diskon 300rb
+        selectDangdutPackage('semi');
+        updateDangdutRate(400000);
+        applyAdatPreset('hemat');
+        state.comboDiscountOverride = 300000;
+        showToast('Paket Gabungan Sawargi berhasil dipilih!');
+      } else if (bundleType === 'kancana') {
+        // Dangdut Full (10 org * 400rb = 4jt) + Adat Lengkap (600+500+2000+1100+300 + sawer 350 + sungkem 300 + mc 750 = 5.9jt)
+        selectDangdutPackage('full');
+        updateDangdutRate(400000);
+        applyAdatPreset('lengkap');
+        state.comboDiscountOverride = 500000;
+        showToast('Paket Gabungan Kancana VIP berhasil dipilih!');
+      }
+      updateCalculator();
+      scrollToCalculator();
+    }
+
+    // RENDER TAB 4: KURSUS SENI
+    function renderKursusSection() {
+      const container = document.getElementById('kursus-container');
+      container.innerHTML = DATA_KURSUS.map(item => {
+        const qty = state.kursus[item.id] || 0;
+        return `
+          <div class="rounded-2xl p-4 border-2 ${qty > 0 ? 'border-rancage-purple bg-rancage-purple/5' : 'border-gray-200 bg-white'} flex flex-col justify-between transition">
+            <div>
+              <span class="text-[11px] font-bold bg-rancage-gold/20 text-rancage-purple px-2.5 py-0.5 rounded-full">${item.category}</span>
+              <h3 class="font-bold text-base text-rancage-purple mt-2">${item.title}</h3>
+              <p class="text-xs text-gray-600 mt-1">${item.desc}</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+              <div>
+                <span class="font-extrabold text-sm text-rancage-purple">${formatRupiah(item.price)}</span>
+                <span class="text-[11px] text-gray-500"> / ${item.unit}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="updateKursusQty('${item.id}', -1)" class="w-7 h-7 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-rancage-purple font-bold text-xs">-</button>
+                <span class="w-6 text-center font-bold text-xs">${qty}</span>
+                <button onclick="updateKursusQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-rancage-purple text-white font-bold text-xs">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateKursusQty(id, delta) {
+      const next = Math.max(0, (state.kursus[id] || 0) + delta);
+      state.kursus[id] = next;
+      renderKursusSection();
+      updateCalculator();
+    }
+
+    // RENDER TAB 5: SEWA KOSTUM
+    function renderKostumSection() {
+      const container = document.getElementById('kostum-container');
+      container.innerHTML = DATA_KOSTUM.map(item => {
+        const qty = state.kostum[item.id] || 0;
+        return `
+          <div class="rounded-2xl overflow-hidden border-2 ${qty > 0 ? 'border-rancage-purple bg-rancage-purple/5' : 'border-gray-200 bg-white'} flex flex-col justify-between transition">
+            <div>
+              <div class="h-32 bg-gradient-to-br from-rancage-purpleDark via-rancage-purple to-rancage-purpleLight flex items-center justify-center relative">
+                <span class="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider bg-rancage-gold text-rancage-purpleDark px-2.5 py-0.5 rounded-full">${item.badge}</span>
+                <i class="fa-solid ${item.icon} text-4xl text-rancage-goldLight/80"></i>
+              </div>
+              <div class="p-4">
+                <h3 class="font-bold text-sm text-rancage-purple">${item.name}</h3>
+                <p class="text-xs text-gray-600 mt-1.5 leading-relaxed"><span class="font-semibold text-gray-700">Termasuk:</span> ${item.include}</p>
+              </div>
+            </div>
+            <div class="px-4 pb-4 pt-2 flex items-center justify-between border-t border-gray-100">
+              <div>
+                <span class="font-extrabold text-sm text-rancage-purple">${formatRupiah(item.price)}</span>
+                <span class="text-[11px] text-gray-500"> / set</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="updateKostumQty('${item.id}', -1)" class="w-7 h-7 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-rancage-purple font-bold text-xs">-</button>
+                <span class="w-6 text-center font-bold text-xs">${qty}</span>
+                <button onclick="updateKostumQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-rancage-purple text-white font-bold text-xs">+</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateKostumQty(id, delta) {
+      const next = Math.max(0, (state.kostum[id] || 0) + delta);
+      state.kostum[id] = next;
+      renderKostumSection();
+      updateCalculator();
+    }
+
+    // 4. KALKULATOR ESTIMASI & KERANJANG
+    function updateCalculator() {
+      const cartItems = [];
+      let hasDangdut = false;
+      let hasAdat = false;
+
+      // 1. Cek Dangdut
+      if (state.dangdut.packageId && state.dangdut.roster.length > 0) {
+        hasDangdut = true;
+        const pkg = DATA_DANGDUT_PACKAGES.find(p => p.id === state.dangdut.packageId);
+        const totalDangdut = state.dangdut.roster.length * state.dangdut.ratePerPerson;
+        cartItems.push({
+          category: 'Hiburan Dangdut',
+          name: `${pkg.name} (${state.dangdut.roster.length} Personil)`,
+          detail: `Tarif ${formatRupiah(state.dangdut.ratePerPerson)}/org`,
+          price: totalDangdut,
+          onRemove: () => clearDangdutPackage()
+        });
+      }
+
+      // 2. Cek Adat Personil
+      DATA_ADAT_PERSONIL.forEach(item => {
+        const sel = state.adatPersonil[item.id];
+        if (sel && sel.qty > 0) {
+          hasAdat = true;
+          const unitPrice = item.hasTier ? item.tiers[sel.tier].price : item.price;
+          const tierLabel = item.hasTier ? ` - ${sel.tier.toUpperCase()}` : '';
+          cartItems.push({
+            category: 'Upacara Adat',
+            name: `${item.name}${tierLabel} (x${sel.qty})`,
+            detail: `${formatRupiah(unitPrice)} / unit`,
+            price: unitPrice * sel.qty,
+            onRemove: () => {
+              state.adatPersonil[item.id].qty = 0;
+              renderAdatSection();
+              updateCalculator();
+            }
+          });
+        }
+      });
+
+      // 3. Cek Layanan Ambu
+      DATA_AMBU_SERVICES.forEach(srv => {
+        if (state.ambuServices[srv.id]) {
+          hasAdat = true;
+          cartItems.push({
+            category: 'Prosesi Ambu',
+            name: srv.name,
+            detail: 'Layanan Khusus Adat',
+            price: srv.price,
+            onRemove: () => toggleAmbuService(srv.id)
+          });
+        }
+      });
+
+      // 4. Cek Kursus
+      DATA_KURSUS.forEach(item => {
+        const qty = state.kursus[item.id] || 0;
+        if (qty > 0) {
+          cartItems.push({
+            category: 'Kursus Seni',
+            name: `${item.title} (x${qty})`,
+            detail: `${formatRupiah(item.price)} / ${item.unit}`,
+            price: item.price * qty,
+            onRemove: () => {
+              state.kursus[item.id] = 0;
+              renderKursusSection();
+              updateCalculator();
+            }
+          });
+        }
+      });
+
+      // 5. Cek Sewa Kostum
+      DATA_KOSTUM.forEach(item => {
+        const qty = state.kostum[item.id] || 0;
+        if (qty > 0) {
+          cartItems.push({
+            category: 'Sewa Kostum',
+            name: `${item.name} (x${qty} set)`,
+            detail: `${formatRupiah(item.price)} / set`,
+            price: item.price * qty,
+            onRemove: () => {
+              state.kostum[item.id] = 0;
+              renderKostumSection();
+              updateCalculator();
+            }
+          });
+        }
+      });
+
+      // Render Daftar di Kalkulator
+      const container = document.getElementById('cart-items-container');
+      const summaryBox = document.getElementById('cart-summary-box');
+      const badgeCount = document.getElementById('header-badge-count');
+
+      badgeCount.textContent = cartItems.length;
+
+      if (cartItems.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-gray-400">
+            <i class="fa-solid fa-basket-shopping text-3xl mb-2 text-rancage-gold/50"></i>
+            <p class="text-sm font-medium text-gray-500">Belum ada layanan yang dipilih</p>
+            <p class="text-xs mt-1">Silakan pilih paket atau layanan di sebelah kiri untuk melihat estimasi biaya.</p>
+          </div>
+        `;
+        summaryBox.classList.add('hidden');
+        return;
+      }
+
+      container.innerHTML = cartItems.map((item, idx) => `
+        <div class="flex items-start justify-between gap-2 bg-rancage-cream/70 p-3 rounded-xl border border-rancage-gold/30 text-xs">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-rancage-goldDark block">${item.category}</span>
+            <span class="font-bold text-rancage-purple block mt-0.5">${item.name}</span>
+            <span class="text-[11px] text-gray-500">${item.detail}</span>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="font-extrabold text-rancage-purple block">${formatRupiah(item.price)}</span>
+            <button onclick="removeCartItemByIndex(${idx})" class="text-[11px] text-red-500 hover:underline mt-1">Hapus</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Simpan referensi fungsi hapus sementara
+      window._currentCartRemoveHandlers = cartItems.map(i => i.onRemove);
+
+      // Hitung Subtotal & Diskon Gabungan
+      const subtotal = cartItems.reduce((sum, item) => sum + item.price, 0);
+      let discount = 0;
+      if (hasDangdut && hasAdat) {
+        discount = state.comboDiscountOverride > 0 ? state.comboDiscountOverride : 250000;
+      }
+      const grandTotal = Math.max(0, subtotal - discount);
+
+      document.getElementById('summary-subtotal').textContent = formatRupiah(subtotal);
+      const discountRow = document.getElementById('summary-discount-row');
+      if (discount > 0) {
+        discountRow.classList.remove('hidden');
+        document.getElementById('summary-discount').textContent = `- ${formatRupiah(discount)}`;
+      } else {
+        discountRow.classList.add('hidden');
+      }
+      document.getElementById('summary-total').textContent = formatRupiah(grandTotal);
+      summaryBox.classList.remove('hidden');
+
+      // Simpan ringkasan untuk WhatsApp
+      window._latestOrderSummary = {
+        items: cartItems,
+        subtotal,
+        discount,
+        grandTotal
+      };
+    }
+
+    function removeCartItemByIndex(idx) {
+      if (window._currentCartRemoveHandlers && window._currentCartRemoveHandlers[idx]) {
+        window._currentCartRemoveHandlers[idx]();
+      }
+    }
+
+    function resetAllSelections() {
+      state.dangdut.packageId = null;
+      state.dangdut.roster = [];
+      state.comboDiscountOverride = 0;
+      document.getElementById('dangdut-customizer').classList.add('hidden');
+      DATA_ADAT_PERSONIL.forEach(i => state.adatPersonil[i.id] = { qty: 0, tier: 'mahir' });
+      state.ambuServices = {};
+      state.kursus = {};
+      state.kostum = {};
+
+      renderDangdutPackages();
+      renderAdatSection();
+      renderKursusSection();
+      renderKostumSection();
+      updateCalculator();
+      showToast('Semua pilihan telah di-reset.');
+    }
+
+    // 5. KIRIM PESANAN KE WHATSAPP
+    function sendToWhatsApp() {
+      const summary = window._latestOrderSummary;
+      if (!summary || summary.items.length === 0) {
+        showToast('Silakan pilih minimal 1 layanan terlebih dahulu!');
+        return;
+      }
+
+      const name = document.getElementById('cust-name').value.trim();
+      const date = document.getElementById('cust-date').value;
+      const location = document.getElementById('cust-location').value.trim() || '-';
+      const notes = document.getElementById('cust-notes').value.trim() || '-';
+
+      if (!name || !date) {
+        showToast('Mohon isi Nama Pemesan dan Tanggal Acara!');
+        document.getElementById('cust-name').focus();
+        return;
+      }
+
+      let message = `Sampurasun Admin *Sanggar Seni Rancagé Al-Batukasuri*,\n`;
+      message += `Saya ingin melakukan pemesanan / konsultasi layanan dengan rincian berikut:\n\n`;
+      message += `*DATA PEMESAN*\n`;
+      message += `• Nama: ${name}\n`;
+      message += `• Tanggal Acara: ${date}\n`;
+      message += `• Lokasi: ${location}\n`;
+      message += `• Catatan: ${notes}\n\n`;
+      message += `*RINCIAN LAYANAN DIPILIH*\n`;
+
+      summary.items.forEach((item, index) => {
+        message += `${index + 1}. [${item.category}] ${item.name} — *${formatRupiah(item.price)}*\n`;
+      });
+
+      message += `\n*ESTIMASI BIAYA*\n`;
+      message += `• Subtotal: ${formatRupiah(summary.subtotal)}\n`;
+      if (summary.discount > 0) {
+        message += `• Diskon Paket Gabungan: -${formatRupiah(summary.discount)}\n`;
+      }
+      message += `• *TOTAL ESTIMASI: ${formatRupiah(summary.grandTotal)}*\n\n`;
+      message += `Mohon informasi ketersediaan jadwal untuk tanggal tersebut. Hatur nuhun!`;
+
+      const adminPhone = '6285860755873';
+      const waUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, '_blank');
+    }
+
+    // 6. UTILITAS UI (MODAL, TOAST, COPY, SCROLL)
+    function openInfoModal() {
+      const modal = document.getElementById('info-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeInfoModal() {
+      const modal = document.getElementById('info-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function scrollToCalculator() {
+      document.getElementById('calculator-panel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyText(text, label) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`${label} (${text}) berhasil disalin!`);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    // Jalankan Aplikasi saat DOM siap
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
 
