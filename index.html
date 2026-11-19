@@ -1624,7 +1624,37 @@ function rancageRenderPrices(){
  p.push('<div class="flex flex-wrap gap-2"><button type="button" onclick="rancageSavePrices()" class="flex-1 min-w-[150px] rounded-xl bg-[#4A154B] text-white p-3 text-sm font-extrabold">Simpan Semua Rincian Harga</button>');
  if(!admin)p.push('<button type="button" onclick="rancageAskReset()" class="flex-1 min-w-[150px] rounded-xl border-2 border-[#D4AF37] bg-white text-[#4A154B] p-3 text-sm font-extrabold">↩ Kembali ke Harga Dasar</button>');
  p.push('</div><p class="text-[10px] text-gray-500">Tabel dapat digeser ke samping pada layar HP. Perubahan disimpan ke konfigurasi harga Supabase yang sudah digunakan aplikasi.</p>');
- document.getElementById("rancagePanelContent").innerHTML=p.join("");
+ const root=document.getElementById("rancagePanelContent");
+ root.innerHTML=p.join("");
+ const sections=Array.from(root.children).filter(el=>el.tagName==="SECTION");
+ const accessNames=["Hiburan Dangdut","Upacara Adat — Personil","Layanan Khusus Ambu","Kursus Seni","Sewa Kostum","Jatah Pimpro"];
+ const accessIcons=["🎤","🎎","🌿","🎨","👘","💰"];
+ const access=document.createElement("div");
+ access.className="grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-2xl border border-[#D4AF37]/60 bg-[#fffaf0] p-3";
+ access.innerHTML='<div class="col-span-2 sm:col-span-3 mb-1"><b class="text-sm text-[#4A154B]">Akses Tabel Pengaturan Harga</b><p class="text-[10px] text-gray-500">Ketuk salah satu tombol untuk membuka tabel yang diperlukan.</p></div>'+accessNames.map((name,i)=>'<button type="button" data-price-access="'+i+'" onclick="rancageTogglePriceSection('+i+')" class="rounded-xl border border-[#D4AF37] bg-white px-2 py-3 text-xs font-extrabold text-[#4A154B] shadow-sm active:scale-[.98]">'+accessIcons[i]+' '+name+'</button>').join("");
+ const info=root.firstElementChild;
+ if(info)info.insertAdjacentElement("afterend",access);else root.prepend(access);
+ sections.forEach((section,i)=>{section.dataset.priceSection=String(i);section.hidden=true;});
+}
+function rancageTogglePriceSection(index){
+ const root=document.getElementById("rancagePanelContent");
+ if(!root)return;
+ const sections=Array.from(root.querySelectorAll(":scope > section[data-price-section]"));
+ const target=sections.find(el=>Number(el.dataset.priceSection)===Number(index));
+ if(!target)return;
+ const wasOpen=!target.hidden;
+ sections.forEach(el=>el.hidden=true);
+ root.querySelectorAll("[data-price-access]").forEach(btn=>{
+  const active=Number(btn.dataset.priceAccess)===Number(index)&&!wasOpen;
+  btn.classList.toggle("bg-[#4A154B]",active);
+  btn.classList.toggle("text-white",active);
+  btn.classList.toggle("bg-white",!active);
+  btn.setAttribute("aria-expanded",active?"true":"false");
+ });
+ if(!wasOpen){
+  target.hidden=false;
+  target.scrollIntoView({behavior:"smooth",block:"start"});
+ }
 }
 function rancageResizeDangdutRows(pkgId,value){
  const c=rancageReadPriceForm(),count=Math.max(1,Math.min(30,parseInt(value,10)||1));c.dangdut.personilPackages=c.dangdut.personilPackages||{};
