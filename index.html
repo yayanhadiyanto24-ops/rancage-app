@@ -1079,14 +1079,15 @@
       container.innerHTML = DATA_KURSUS.map(item => {
         const qty = state.kursus[item.id] || 0;
         return `
-          <div class="rounded-xl p-3 border-2 ${qty > 0 ? 'border-rancage-purple bg-rancage-purple/5' : 'border-gray-200 bg-white'} flex flex-col justify-between transition">
+          <div class="min-w-0 w-full overflow-hidden rounded-xl p-3 border-2 ${qty > 0 ? 'border-rancage-purple bg-rancage-purple/5' : 'border-gray-200 bg-white'} flex flex-col justify-between transition">
             <div>
               <span class="text-[10px] font-bold bg-rancage-gold/20 text-rancage-purple px-2 py-0.5 rounded-full">${item.category}</span>
               <h3 class="font-bold text-sm leading-tight text-rancage-purple mt-1.5">${item.title}</h3>
               <p class="text-[11px] leading-snug text-gray-600 mt-1 line-clamp-2">${item.desc}</p>
             </div>
-            <div class="mt-2 pt-2 border-t border-gray-100 flex flex-col items-center gap-1.5">
-              <div class="w-full text-center text-[10px] leading-none font-bold text-rancage-purple whitespace-nowrap">${qty>0?formatRupiah(item.price):'Pilih untuk melihat harga'} <span class="font-normal text-gray-500">/ ${item.unit}</span></div>
+            <div class="mt-2 pt-2 border-t border-gray-100 flex min-w-0 w-full flex-col items-center gap-1.5">
+              <div class="w-full min-w-0 text-center text-[9px] leading-tight font-bold text-rancage-purple whitespace-nowrap overflow-hidden">${qty>0?formatRupiah(item.price):'Pilih untuk melihat harga'}</div>
+              <div class="w-full text-center text-[10px] leading-none text-gray-500">/ ${item.unit}</div>
               <div class="flex items-center justify-center gap-2">
                 <button onclick="updateKursusQty('${item.id}', -1)" class="w-7 h-7 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-rancage-purple font-bold text-xs">-</button>
                 <span class="w-6 text-center font-bold text-xs">${qty}</span>
