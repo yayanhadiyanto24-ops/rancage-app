@@ -1085,12 +1085,9 @@
               <h3 class="font-bold text-sm leading-tight text-rancage-purple mt-1.5">${item.title}</h3>
               <p class="text-[11px] leading-snug text-gray-600 mt-1 line-clamp-2">${item.desc}</p>
             </div>
-            <div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
-              <div>
-                <span class="font-extrabold text-sm text-rancage-purple">${qty>0?formatRupiah(item.price):'Pilih untuk melihat harga'}</span>
-                <span class="text-[11px] text-gray-500"> / ${item.unit}</span>
-              </div>
-              <div class="flex items-center gap-2">
+            <div class="mt-2 pt-2 border-t border-gray-100 flex flex-col items-center gap-1.5">
+              <div class="w-full text-center text-[10px] leading-none font-bold text-rancage-purple whitespace-nowrap">${qty>0?formatRupiah(item.price):'Pilih untuk melihat harga'} <span class="font-normal text-gray-500">/ ${item.unit}</span></div>
+              <div class="flex items-center justify-center gap-2">
                 <button onclick="updateKursusQty('${item.id}', -1)" class="w-7 h-7 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-rancage-purple font-bold text-xs">-</button>
                 <span class="w-6 text-center font-bold text-xs">${qty}</span>
                 <button onclick="updateKursusQty('${item.id}', 1)" class="w-7 h-7 rounded-lg bg-rancage-purple text-white font-bold text-xs">+</button>
