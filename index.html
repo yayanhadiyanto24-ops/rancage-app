@@ -1813,7 +1813,22 @@ async function rancageConfirmReset(){
   rancagePriceOverrides={};const next=rancageClone(rancageBasePriceConfig);rancageApply(next);renderDangdutPackages();renderDangdutRoster();renderAdatSection();renderKursusSection();renderKostumSection();updateCalculator();rancageRenderPrices();showToast("Harga pribadi kembali ke harga dasar terbaru.");
  }catch(e){showToast("Gagal mengembalikan harga: "+(e.message||"periksa koneksi"));}
 }
-function rancageSetPanelTab(tab){if(tab==="prices")rancageRenderPrices();if(tab==="orders")rancageRenderOrders();if(tab==="cash")rancageRenderCash();if(tab==="visitors")rancageRenderVisitors();if(tab==="approvals")rancageRenderApprovals();if(tab==="link")rancageRenderLink();}
+function rancageSetPanelTab(tab){
+ const tabs={prices:"Pengaturan Harga",orders:"Pesanan",cash:"Uang Kas 1%",visitors:"Pengunjung",approvals:"Pendaftaran Personil",link:"Link Pelanggan Saya"};
+ Object.keys(tabs).forEach(key=>{
+  const button=Array.from(document.querySelectorAll("button[onclick]")).find(el=>el.getAttribute("onclick")===("rancageSetPanelTab('"+key+"')"));
+  if(!button)return;
+  button.classList.remove("bg-[#4A154B]","text-white","bg-white","border","text-[#4A154B]");
+  if(key===tab)button.classList.add("bg-[#4A154B]","text-white");
+  else button.classList.add("bg-white","border","text-[#4A154B]");
+ });
+ if(tab==="prices")rancageRenderPrices();
+ if(tab==="orders")rancageRenderOrders();
+ if(tab==="cash")rancageRenderCash();
+ if(tab==="visitors")rancageRenderVisitors();
+ if(tab==="approvals")rancageRenderApprovals();
+ if(tab==="link")rancageRenderLink();
+}
 function rancageEscapeHtml(v){return String(v==null?"":v).replace(/[&<>"']/g,function(ch){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];});}
 async function rancageRenderVisitors(){
  const c=document.getElementById("rancagePanelContent");
